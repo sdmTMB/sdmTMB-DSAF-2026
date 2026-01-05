@@ -1,6 +1,6 @@
 # Spatial and spatiotemporal models with sdmTMB for estimating species distribution and index standardization
 
-Slides and exercises: <https://pbs-assess.github.io/sdmTMB-DSAF-2026>
+Slides and exercises: <https://sdmTMB.github.io/sdmTMB-DSAF-2026>
 
 ## Spatial and spatiotemporal modelling with sdmTMB
 
