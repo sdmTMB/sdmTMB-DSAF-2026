@@ -1,0 +1,422 @@
+---
+title: "Residuals with sdmTMB"
+subtitle: "DFO DSAF workshop"
+author: ""
+institute: ""
+date: "January 12--16 2026"
+output:
+  xaringan::moon_reader:
+    css: ["xaringan-themer.css", "theme.css"]
+    lib_dir: libs
+    nature:
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+<!-- Build with: xaringan::inf_mr() -->
+
+```{r preamble, include=FALSE, cache=FALSE}
+source(here::here("slides/preamble.R"))
+do.call(knitr::opts_chunk$set, knitr_opts)
+```
+
+```{r libs, include=FALSE}
+library(dplyr)
+library(sdmTMB)
+library(ggplot2)
+```
+
+```{r}
+set.seed(1)
+predictor_dat <- data.frame(X = runif(1000), Y = runif(1000), a1 = rnorm(1000))
+mesh <- make_mesh(predictor_dat, xy_cols = c("X", "Y"), cutoff = 0.1)
+dat <- sdmTMB_simulate(
+  formula = ~ 1 + a1,
+  data = predictor_dat,
+  mesh = mesh,
+  family = nbinom2(link = "log"),
+  phi = 0.4,
+  range = 0.4,
+  sigma_O = 0.4,
+  seed = 1,
+  B = c(0.2, 0.8) # B0 = intercept, B1 = a1 slope
+)
+```
+
+```{r}
+fit_pois <- sdmTMB(observed ~ a1, data = dat, family = poisson(), mesh = mesh)
+fit_nb2 <- update(fit_pois, family = nbinom2())
+fit_nb2_miss <- update(fit_nb2, formula. = observed ~ 1)
+```
+
+# Why look at residuals
+
+- Assess whether the model is probabilistically consistent with the data
+
+--
+
+- Check for remaining spatial or temporal structure
+
+--
+
+- Evaluate missing covariate effects
+
+--
+
+- Detect over- or under- dispersion (from simulated observations)
+
+--
+
+- Assess zero inflation (from simulated observations)
+
+---
+
+# Good residuals, bad model
+
+Residuals can only tell us whether the model is probabilistically consistent with the data or if we're ignoring major structural elements.
+
+They don't tell us whether the model is any good at prediction!
+
+---
+
+# Types of residuals in sdmTMB
+
+- *Many*, see `?residuals.sdmTMB`
+
+--
+
+- Most useful: "randomized quantile" (RQR) (Dunn & Smyth 1996)
+- Sometimes called "probability integral transform" (PIT) residuals (Smith 1985).
+  
+.tiny[
+Dunn, P.K. & Smyth, G.K. (1996). Randomized Quantile Residuals. Journal of Computational and Graphical Statistics, 5, 236–244.
+
+Smith, J.Q. (1985). Diagnostic checks of non-standard time series models. Journal of Forecasting, 4, 283–291.
+]
+
+---
+
+# Why use *randomized quantile residuals*?
+
+Because they let us work with residuals that are expected to be:
+
+- standard normal, N(0, 1)
+- or uniform, U(0, 1)
+
+(take your pick!)
+
+regardless of the distribution family we work with.
+
+---
+
+# What does *randomized quantile* mean?
+
+**Quantile**: Where does each observed value fall in its predicted distribution?
+
+**Randomized**: Add randomization for any discrete data
+
+E.g., for the gamma:
+
+```r
+u <- pgamma(q = y, shape = s1, scale = s2)
+qnorm(u)
+```
+
+where `y`, are the observations and `s1` and `s2` are estimated in the model.
+  
+---
+
+# What does *randomized quantile* mean?
+
+**Quantile**: Where does each observed value fall in its predicted distribution?
+
+**Randomized**: Add randomization for any discrete data
+
+E.g., for the Poisson:
+
+```r
+a <- ppois(y - 1, mu)
+b <- ppois(y, mu)
+u <- runif(n = length(y), min = a, max = b)
+qnorm(u)
+```
+
+where the `runif()` adds randomization.
+
+.tiny[
+See the [residuals vignette](https://pbs-assess.github.io/sdmTMB/articles/residual-checking.html) that expands on this.]
+
+---
+
+# Decisions within the type of residuals
+
+1. How do we treat the fixed and random effects?
+
+--
+
+2. Do we use theoretical or simulation-based quantiles
+
+---
+
+# Fixed and random effects
+
+*Many* options, useful ones to consider:
+
+Hold fixed effects at their maximum likelihood estimates (MLEs)
+
+Set random effects to one of:
+  - Empirical Bayes estimates *(weird)*
+  - One sample drawn from their precision matrix *(good enough, fast)*
+  - One sample drawn from an MCMC chain *(great, slow)*
+
+---
+
+# An aside on empirical Bayes
+
+.small[
+What the heck is an empirical Bayes (EB) random effect!?
+]
+
+--
+
+.small[
+Find fixed effects that maximize the marginal log likelihood.
+]
+
+--
+
+.small[
+Hold the fixed effects at these MLEs.
+]
+
+--
+
+.small[
+Now use an optimizer to find the random effects that maximize the likelihood.
+]
+
+--
+
+.small[
+These are what you're used to getting out of lme4, mgcv, glmmTMB, sdmTMB, etc.!
+]
+
+--
+
+.small[
+Key concept: EB estimates are pulled towards the observations and are not expected to reflect the assumed random effect distribution
+]
+
+---
+
+# MLE-EB residuals gone wrong
+
+```{r}
+set.seed(123)
+predictor_dat <- data.frame(
+  X = runif(1000), Y = runif(1000),
+  year = rep(1:5, each = 200)
+)
+mesh <- make_mesh(predictor_dat, xy_cols = c("X", "Y"), cutoff = 0.1)
+sim_dat <- sdmTMB_simulate(
+  formula = ~ 1,
+  data = predictor_dat,
+  time = "year",
+  mesh = mesh,
+  family = gaussian(),
+  range = 0.3,
+  sigma_E = 0.3,
+  phi = 0.1,
+  sigma_O = 0.4,
+  seed = 1,
+  B = 0.2 # intercept
+)
+fit <- sdmTMB(observed ~ 1, data = sim_dat, time = "year", mesh = mesh)
+set.seed(1)
+```
+
+```{r, echo=TRUE}
+r1 <- residuals(fit, type = "mle-eb")
+qqnorm(r1);abline(0, 1)
+```
+
+---
+
+# MLE-MVN residuals gone right
+
+```{r}
+set.seed(1)
+```
+
+```{r, echo=TRUE}
+r2 <- residuals(fit, type = "mle-mvn")
+qqnorm(r2);abline(0, 1)
+```
+
+---
+
+# Theoretical vs. simulation-based quantiles
+
+Do we answer the question "Where does each observed value fall in its predicted distribution?" by
+
+1. Using the theoretical CDF function, e.g., `pnorm()`, `pgamma()`, or
+
+--
+
+2. Simulating each observation many times and calculating the proportion of times our simulated values are $\le$ the observation.
+
+---
+
+# Theoretical vs. simulation-based residual tradeoffs
+
+- In sdmTMB, the theoretical RQRs are N(0, 1)
+
+--
+
+- In DHARMa, the simulation-based RQRs are U(0, 1)
+
+--
+
+- We haven't worked out the theoretical RQRs for all distributions or for delta models
+
+--
+
+- Simulation-based RQRs are stochastic (so set a seed and take enough draws)
+
+---
+
+# Normal(0, 1) vs. Uniform(0, 1)
+
+Residuals from a perfectly matched model:
+
+```{r, echo=FALSE, eval=TRUE}
+par(mfrow = c(1, 2))
+rq_res <- residuals(fit_nb2, type = "mle-mvn")
+qqnorm(rq_res);abline(0, 1)
+
+s_nb2 <- simulate(fit_nb2, nsim = 200, type = "mle-mvn")
+dharma_residuals(s_nb2, fit_nb2)
+```
+
+---
+
+# Theoretical RQRs in sdmTMB
+
+```{r, eval=FALSE, echo=TRUE}
+r <- residuals(fit, type = "mle-mvn")
+qqnorm(r)
+abline(0, 1)
+```
+
+```{r, eval=TRUE}
+qqnorm(rq_res);abline(0, 1)
+```
+
+---
+
+# Simulation-based RSRs in sdmTMB
+
+```{r, eval=FALSE, echo=TRUE}
+s <- simulate(fit, nsim = 200, type = "mle-mvn")
+dharma_residuals(s, fit)
+
+# or use the pipe:
+
+simulate(fit, nsim = 200, type = "mle-mvn") |>
+  dharma_residuals(fit)
+
+# or return the DHARMa object itself:
+
+simulate(fit, nsim = 200, type = "mle-mvn") |>
+  dharma_residuals(fit, return_DHARMa = TRUE)
+```
+
+Note the `type = "mle-mvn"`!
+
+---
+
+# Other things you can do with DHARMa simulations
+
+Check for zero inflation:
+
+```{r}
+fit <- fit_nb2
+set.seed(1)
+```
+
+```{r, echo=TRUE}
+s <- simulate(fit, nsim = 200, type = "mle-mvn")
+mean(s == 0)
+mean(dat$observed == 0)
+```
+
+---
+
+# Other things you can do with DHARMa simulations
+
+Check for zero inflation:
+
+```{r, echo=TRUE, out.width="60%", results='hide'}
+dharma <- simulate(fit, nsim = 200, type = "mle-mvn") |>
+  dharma_residuals(fit, return_DHARMa = TRUE)
+DHARMa::testZeroInflation(dharma)
+```
+
+---
+
+# Other things you can do with DHARMa simulations
+
+Check for overdispersion:
+
+```{r, echo=TRUE, out.width="65%", results='hide'}
+DHARMa::testOverdispersion(dharma)
+```
+
+---
+
+# Other things you can do with DHARMa simulations
+
+Check for spatial correlation:
+
+.xsmall[
+```{r, echo=TRUE, out.width="65%", results='hide'}
+DHARMa::testSpatialAutocorrelation(dharma, x = dat$X, y = dat$Y)
+```
+]
+
+---
+
+# Other things you can do with DHARMa simulations
+
+Check for missing covariates:
+
+```{r, echo=TRUE, out.width="65%", results='hide'}
+DHARMa::plotResiduals(dharma, form = dat$a1)
+```
+
+---
+
+# Overall messages
+
+- Look at residuals and model simulation output
+
+--
+
+- Don't take the p-values or small deviations too seriously; look for broad deviations
+
+--
+
+- N(0, 1) residuals emphasize tail behaviour more than U(0, 1)
+
+--
+
+- Residuals are good for more than QQ plots
+
+--
+
+- Probably use `type = mle-mvn`
+
+--
+
+- Simulation-based residuals are available for all models in sdmTMB
+

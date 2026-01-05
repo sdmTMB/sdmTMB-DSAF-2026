@@ -1,0 +1,452 @@
+---
+title: "Disribution shift"
+format: html
+editor: visual
+execute:
+  echo: true
+  eval: true
+---
+
+# Goals:
+
+-   Learn how to combine or "stitch" together data from multiple surveys that use the same gear but don't have the same spatial coverage each year. ("Expanded area" models.)
+-   Fit models with different temporal correlation structures to fill gaps.
+-   Experience when an expanded area model goes awry with biennial survey data.
+-   Compare models using AIC, cross-validation, and simulation testing.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+library(sdmTMB)
+library(dplyr)
+library(ggplot2)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = RColorBrewer::brewer.pal(8, "Set2"))
+options(ggplot2.discrete.fill = RColorBrewer::brewer.pal(8, "Set2"))
+theme_set(theme_light())
+```
+
+# The data
+
+We will work with quillback rockfish data from two hard bottom longline (HBLL) surveys in the inside waters of British Columbia: HBLL INS N (North) and HBLL INS S (South). The key challenge is that these surveys don't occur every year, creating gaps in our time series.
+
+```{r}
+d <- readRDS(here::here("data/quillback-hbll-inside.rds"))
+yrs <- sort(unique(d$year))
+all_yrs <- seq(min(yrs), max(yrs))
+```
+
+Let's quickly visualize the data:
+
+```{r}
+ggplot(d, aes(longitude, latitude, size = density_ppkm2, colour = density_ppkm2)) +
+  geom_point(pch = 21) +
+  scale_size_area() +
+  facet_wrap(~year) +
+  labs(title = "Quillback Rockfish Density")
+```
+
+### Exercise:
+
+1.  Which years have data from both surveys? Which have data from only one?
+2.  Are there missing years?
+3.  Do you see any abnormalities in the survey implementation?
+4.  What challenges might arise when trying to estimate an abundance index for years with missing survey data?
+
+# Prepare data and mesh
+
+```{r}
+# Add UTM coordinates
+d <- add_utm_columns(d, utm_crs = 32610)
+
+# Create a finite element mesh
+mesh <- make_mesh(d, c("X", "Y"), cutoff = 10)
+plot(mesh)
+```
+
+# Model 1: IID spatiotemporal fields
+
+Our first approach treats each year independently with IID (independent and identically distributed) spatiotemporal fields. This is a reasonable starting point but doesn't help us borrow strength across years and doesn't penalize patterns that may appear in the year effects. For many cases though, this will be just fine.
+
+```{r}
+fit_iid <- sdmTMB(
+  density_ppkm2 ~ factor(year),
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE
+)
+
+sanity(fit_iid)
+fit_iid
+```
+
+Check for anisotropy:
+
+```{r}
+plot_anisotropy(fit_iid)
+```
+
+## Set up prediction grid
+
+To calculate abundance indices, we need a prediction grid. We'll also create a look-up table to track which survey(s) occurred in each year.
+
+```{r}
+# Use the standard HBLL inside grid:
+grid_one <- readRDS(here::here("data/hbll-inside-grid.rds"))
+
+# Add UTM coordinates
+grid_one <- add_utm_columns(grid_one, c("longitude", "latitude"), utm_crs = 32610)
+
+# Expand the grid to all sampled years
+grid <- replicate_df(grid_one, "year", unique(d$year))
+# And to *all* years to test interpolation
+grid_all_yrs <- replicate_df(grid_one, "year", all_yrs)
+```
+
+```{r}
+ggplot(grid_one, aes(X, Y)) + 
+  geom_tile(width = 2, height = 2, fill = "grey50") +
+  geom_point(data = d, size = 2, pch = ".", colour = "red") +
+  coord_equal()
+```
+
+### Exercise:
+
+1.  What do you notice about the survey locations (red dots) and the grid?
+2.  What are the tradeoffs to including or excluding red dots outside the survey grid?
+
+Create look-up table for which surveys occurred when. This is just for plotting later.
+
+```{r}
+lu <- select(d, year, survey_abbrev) |>
+  distinct()
+lu <- filter(lu, year != 2021) |>
+  bind_rows(tibble(year = 2021, survey_abbrev = "Both")) |>
+  arrange(year)
+lu
+```
+
+Generate predictions and calculate an index:
+
+```{r}
+p <- predict(fit_iid, newdata = grid, return_tmb_object = TRUE)
+ind_iid <- get_index(p, area = 4)
+
+left_join(ind_iid, lu) |>
+  ggplot(aes(year, est, ymin = lwr, ymax = upr, colour = survey_abbrev)) +
+  geom_pointrange() +
+  labs(x = "Year", y = "Abundance index", colour = "Survey")
+```
+
+### Exercise:
+
+1.  What does our area-expanded index represent in terms of units here?
+2.  What do you notice about north (orange) vs. south (purple) index values? Does that seem likely for a rockfish?
+3.  What do you notice about the confidence intervals in 2021? Why are they like that?
+4.  Can this model create predictions and index values for missing years?
+5.  What do we need to do this?
+
+# Model 2: Time-varying intercept (random walk)
+
+This model includes a time-varying intercept that follows a random walk, which can help smooth the index through missing years. We use IID spatiotemporal fields and include `extra_time` for years with missing data.
+
+```{r}
+fit_tv <- sdmTMB(
+  density_ppkm2 ~ 0,
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE,
+  spatiotemporal = "iid",
+  time_varying = ~1,
+  time_varying_type = "rw",
+  spatial = "on",
+  extra_time = c(2006, 2017, 2020)
+  # silent = FALSE
+)
+
+sanity(fit_tv)
+print(fit_tv)
+```
+
+Generate predictions:
+
+```{r}
+p_tv <- predict(fit_tv, newdata = grid_all_yrs, return_tmb_object = TRUE)
+ind_tv <- get_index(p_tv, area = 4)
+
+left_join(ind_tv, lu) |>
+  ggplot(aes(year, est, ymin = lwr, ymax = upr, colour = survey_abbrev)) +
+  geom_pointrange() +
+  labs(x = "Year", y = "Abundance index", colour = "Survey")
+```
+
+### Exercise:
+
+1.  What are the "NA" survey years?
+2.  Are the CIs on the NA survey years the same as the rest?
+3.  What assumptions is this model making about abundance in the missing years?
+4.  Do we still have a "see-saw" problem?
+
+# Model 3: Random walk spatiotemporal fields
+
+This model uses a random walk for the spatiotemporal fields themselves, allowing the spatial pattern to evolve smoothly over time.
+
+```{r}
+fit_rw <- sdmTMB(
+  density_ppkm2 ~ 1,
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE,
+  spatiotemporal = "rw",
+  spatial = "on",
+  extra_time = c(2006, 2017, 2020)
+  # silent = FALSE
+)
+
+sanity(fit_rw)
+fit_rw
+```
+
+Generate predictions:
+
+```{r}
+p_rw <- predict(fit_rw, newdata = grid_all_yrs, return_tmb_object = TRUE)
+ind_rw <- get_index(p_rw, area = 4)
+
+left_join(ind_rw, lu) |>
+  ggplot(aes(year, est, ymin = lwr, ymax = upr, colour = survey_abbrev)) +
+  geom_pointrange() +
+  labs(x = "Year", y = "Abundance index", colour = "Survey")
+```
+
+### Exercise:
+
+1.  What do you notice about this index compared to the others? What is happening?
+
+# Model comparison
+
+Compare models using AIC:
+
+```{r}
+AIC(fit_rw, fit_tv, fit_iid)
+```
+
+Visualize all three models together:
+
+```{r}
+bind_rows(
+  mutate(ind_rw, model = "Random walk random field"),
+  mutate(ind_tv, model = "Time-varying random walk"),
+  mutate(ind_iid, model = "IID fields, factor years")
+) |>
+  left_join(lu) |>
+  ggplot(aes(year, est, ymin = lwr, ymax = upr, colour = survey_abbrev)) +
+  geom_pointrange() +
+  facet_wrap(~model) +
+  labs(x = "Year", y = "Abundance index", colour = "Survey")
+```
+
+### Exercise:
+
+1.  Which model is preferred by AIC? Is AIC a good metric to tell us everything here?
+2.  How do the models differ in their estimates for the missing years (2006, 2017, 2020)?
+3.  Which model would you choose and why? What additional information would help you decide?
+
+# Simulation testing
+
+We can simulate data from one model and see if we can recover the index with another. This helps us understand what each model can and cannot estimate.
+
+```{r}
+set.seed(42)
+
+# Simulate data from the random walk model
+d$sim_density_ppkm2 <- simulate(fit_rw, nsim = 1)
+
+# Fit the IID factor(year) model to simulated data
+fit_sim <- sdmTMB(
+  sim_density_ppkm2 ~ factor(year),
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE
+)
+
+# Calculate index
+p_sim <- predict(fit_sim, newdata = grid, return_tmb_object = TRUE)
+ind_sim <- get_index(p_sim, area = 4)
+
+left_join(ind_sim, lu) |>
+  ggplot(aes(year, est, ymin = lwr, ymax = upr, colour = survey_abbrev)) +
+  geom_pointrange() +
+  labs(title = "Index from Simulated Data")
+```
+
+### Exercise:
+
+1.  Do we still see the see saw? What does that tell us?
+
+# Residual diagnostics
+
+Check residuals using DHARMa-style residuals:
+
+```{r}
+set.seed(12928)
+simulate(fit_rw, 200, type = "mle-mvn") |> dharma_residuals(fit_rw)
+set.seed(12928)
+simulate(fit_tv, 200, type = "mle-mvn") |> dharma_residuals(fit_tv)
+set.seed(12928)
+simulate(fit_iid, 200, type = "mle-mvn") |> dharma_residuals(fit_iid)
+```
+
+### Exercise:
+
+1.  Do any of the models show obvious residual problems?
+2.  Can residuals alone tell us which model is "correct" for the missing years?
+
+# Cross-validation
+
+Leave-future-out cross-validation can help assess predictive performance. It's not a perfect solution here, but I'm including it as an example of leave-future-out cross validation. This takes a while to run!
+
+```{r}
+library(future)
+plan(multisession, workers = future::availableCores()/2)
+
+d$factor_year <- factor(d$year)
+cv_iid <- sdmTMB_cv(
+  density_ppkm2 ~ 1 + (1 | factor_year),
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE,
+  spatiotemporal = "iid",
+  spatial = "on",
+  # time_varying = ~1,
+  extra_time = c(2006, 2017, 2020),
+  lfo = TRUE,
+  lfo_forecast = 1,
+  lfo_validations = 10,
+  control = sdmTMBcontrol(
+    start = list(re_cov_pars = matrix(10, 1, 1)), # fixed weak SD penalty on random intercept
+    map = list(re_cov_pars = factor(NA))
+  )
+)
+
+cv_rw <- sdmTMB_cv(
+  density_ppkm2 ~ 1,
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE,
+  extra_time = c(2006, 2017, 2020),
+  spatial = "on",
+  spatiotemporal = "rw",
+  lfo = TRUE,
+  lfo_forecast = 1,
+  lfo_validations = 10
+)
+
+# test with a constant random walk penalty:
+ln_tau_V_hat <- get_pars(fit_tv)$ln_tau_V
+cv_tv <- sdmTMB_cv(
+  density_ppkm2 ~ 0,
+  data = d,
+  mesh = mesh,
+  time = "year",
+  family = tweedie(),
+  anisotropy = TRUE,
+  extra_time = c(2006, 2017, 2020),
+  spatial = "on",
+  spatiotemporal = "iid",
+  time_varying = ~1,
+  lfo = TRUE,
+  lfo_forecast = 1,
+  lfo_validations = 10,
+  control = sdmTMBcontrol(
+    start = list(ln_tau_V = ln_tau_V_hat),
+    map = list(ln_tau_V = factor(NA))
+  )
+)
+```
+
+Compare predictive performance (higher log likelihood is better)
+
+```{r}
+cv_iid$sum_loglik
+cv_rw$sum_loglik
+cv_tv$sum_loglik
+```
+
+To better interpret these differences, let's look at the fold-wise log likelihoods. This shows whether one model consistently outperforms another or if differences are driven by a few specific years:
+
+```{r}
+cv_results <- bind_rows(
+  tibble(fold = seq_along(cv_iid$fold_loglik),
+         loglik = cv_iid$fold_loglik,
+         model = "IID fields, independent years"),
+  tibble(fold = seq_along(cv_rw$fold_loglik),
+         loglik = cv_rw$fold_loglik,
+         model = "Random walk random field"),
+  tibble(fold = seq_along(cv_tv$fold_loglik),
+         loglik = cv_tv$fold_loglik,
+         model = "Time-varying random walk")
+) |> 
+  group_by(fold) |> 
+  mutate(loglik = loglik - loglik[model == "Time-varying random walk"])
+
+ggplot(cv_results, aes(fold, loglik, colour = model)) +
+  geom_line() +
+  geom_point() +
+  labs(x = "CV fold (time step)",
+       y = "Log likelihood difference\n(relative to time-varying random walk)",
+       colour = "Model") +
+  theme(legend.position = "bottom")
+```
+
+Calculate the standard error (SE) of the differences to assess if they're meaningful:
+
+```{r}
+# Calculate SE of ELPD differences
+cv_summary <- cv_results |>
+  group_by(model) |>
+  summarise(
+    elpd_diff = sum(loglik),
+    se_diff = sqrt(n()) * sd(loglik),
+    .groups = "drop"
+  ) |>
+  arrange(desc(elpd_diff))
+
+cv_summary
+```
+
+The log predictive density differences tell us about predictive performance. The SE accounts for variability across folds.
+
+### Exercise:
+
+1.  What is leave-future-out cross-validation testing?
+2.  How is this different from standard k-fold cross-validation?
+3.  Looking at the fold-wise plot, does one model consistently outperform the others, or are differences driven by specific folds?
+4.  What are pragmatic reasons for picking the random walk random field model over the annual mean random walk model?
+5.  Is there a natural experiment we could use to evaluate the see-saw effect for one year?
+6.  How might we design a simulation experiment to choose a model?
+
+# Key principles
+
+-   This is hard and we don't have all the answers
+-   Most expanded area models are more straightforward; hopefully you don't have problems as hard as this!
+-   AIC and residuals alone aren't going to save you
+-   Be creative with visualizations and calculated diagnostic statistics
+-   Random walk random fields will nearly always solve "see-saws" but can overly penalize time; can be assessed via self simulation and re-fitting
+-   Penalize time as little as possible *in a stock assessment context*
+-   Try to think of creative ways to use cross validation and natural experiments
+-   If you have to, simulation testing can help answer many thorny questions

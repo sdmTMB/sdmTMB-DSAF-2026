@@ -1,0 +1,339 @@
+---
+title: "Distribution shift metrics"
+format: html
+editor: visual
+execute:
+  echo: true
+  eval: true
+---
+
+# Goals:
+
+-   Gain exposure to calculating a variety of distribution shift metrics with sdmTMB (center of gravity, effective area occupied, range edges, covariate weighted averages)
+-   Explore how spatially varying coefficients can reveal spatially structured trends
+
+# Setup
+
+Load packages and set plotting defaults so figures are consistent throughout.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+library(sdmTMB)
+library(dplyr)
+library(ggplot2)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+options(ggplot2.discrete.colour = RColorBrewer::brewer.pal(8, "Set2"))
+options(ggplot2.discrete.fill = RColorBrewer::brewer.pal(8, "Set2"))
+theme_set(theme_light())
+```
+
+In this vignette, we'll demonstrate calculating distribution shift metrics for Pacific Spiny Dogfish (*Squalus suckleyi*) on the west coast of Vancouver Island.
+
+# Dataset
+
+We'll use the built-in `dogfish` dataset, which contains fisheries-independent trawl survey data from the west coast of Vancouver Island. The dataset includes catch weights, presence/absence, depth, and area swept.
+
+The dataset includes projected spatial coordinates (`X`, `Y`) (UTM zone 9 KM), which we will use to define the spatial axis for distribution metrics. The prediction grid includes the same covariates (e.g., depth) so we can make model-based predictions across the domain.
+
+```{r glimpse-dogfish}
+glimpse(dogfish)
+```
+
+For prediction, we'll use the `wcvi_grid`, which provides a spatial grid covering the survey area:
+
+```{r glimpse-grid}
+glimpse(wcvi_grid)
+```
+
+# Fitting a spatiotemporal model
+
+First, we'll construct a mesh for the spatial random effects:
+
+```{r mesh, fig.asp=0.8}
+mesh <- make_mesh(dogfish, c("X", "Y"), cutoff = 10)
+```
+
+Next, we'll fit a spatiotemporal model for dogfish density using a delta generalized-gamma family (Dunic et al. 2025). This models the positive catches with a generalized gamma distribution that works well for Pacific Dogfish given their occasional giant outlying catch values. A simpler Tweedie or delta-gamma family could have been used too. We'll include depth as a predictor using a quadratic effect:
+
+```{r fit-model}
+fit <- sdmTMB(
+  catch_weight ~ poly(log(depth), 2),
+  data = dogfish,
+  mesh = mesh,
+  family = delta_gengamma(type = "poisson-link"),
+  spatial = "on",
+  time = "year",
+  spatiotemporal = "IID",
+  silent = FALSE
+)
+sanity(fit)
+fit
+```
+
+The model includes spatial and spatiotemporal random fields, allowing density to vary across space and time. The depth effect captures the strong association between dogfish density and bathymetry.
+
+# Making predictions
+
+To calculate range edges, we need to make predictions on a spatial grid that covers the area of interest. We'll replicate the `wcvi_grid` for each year in the dataset and generate predictions with simulation:
+
+```{r predict}
+years <- sort(unique(dogfish$year))
+nd <- replicate_df(wcvi_grid, "year", years)
+```
+
+We will also keep the TMB object so downstream functions (`get_cog()` etc.) have the TMB object to work with.
+
+```{r}
+predictions <- predict(fit, newdata = nd, return_tmb_object = TRUE)
+```
+
+# Center of gravity
+
+The center of gravity (COG) gives the density-weighted mean location of the distribution. We can summarize it as a single point per year, with uncertainty intervals for both the x and y coordinates.
+
+```{r}
+cog <- get_cog(predictions, format = "wide")
+cog
+```
+
+```{r}
+ggplot(cog, aes(est_x, est_y, colour = year)) +
+  geom_point() +
+  geom_linerange(aes(xmin = lwr_x, xmax = upr_x)) +
+  geom_linerange(aes(ymin = lwr_y, ymax = upr_y))
+
+ggplot(cog, aes(year, est_x)) +
+  geom_point() +
+  geom_linerange(aes(ymin = lwr_x, ymax = upr_x))
+
+ggplot(cog, aes(year, est_y)) +
+  geom_point() +
+  geom_linerange(aes(ymin = lwr_y, ymax = upr_y))
+```
+
+# Effective area occupied
+
+The effective area occupied (EAO) is a distributional metric related to concentration. It can decrease when a population becomes more spatially clustered, and increase when the population spreads out. See Thorson et al. (2016) for an explanation of the metric as calculated here. See `exercises/understanding-eao.R` for a walk through.
+
+```{r}
+eao <- get_eao(predictions, area = 4)
+eao
+ggplot(eao, aes(year, est)) + geom_line() +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.4) +
+  ylim(0, NA) +
+  ylab("Effective area occupied (km^2)")
+```
+
+It's saying: if the population were spread uniformly at the expected density experienced by a randomly chosen individual then it would need an area of XX km^2 to contain the total biomass that  year.
+
+# Density-weighted depth
+
+This metric summarizes how the distribution shifts with respect to depth. We flip the sign in the plot so deeper values appear lower on the y-axis.
+
+```{r}
+wa <- get_weighted_average(predictions, vector = nd$depth)
+wa
+ggplot(wa, aes(year, -est)) + geom_line() +
+  geom_ribbon(aes(ymin = -lwr, ymax = -upr), alpha = 0.4)
+```
+ 
+We could also do this with temperature and potentially compare to the density-weighted mean temperature with an average spatial distribution.
+
+See Davidson et al. (2025) for an expanded version of this example and Ward et al. (2024) for a related example with niche width.
+
+# Calculating range edges
+
+The `get_range_edge()` function calculates range edges as density-weighted quantiles along a spatial axis (e.g., latitude, longitude, or depth). This approach follows methods used in Fredston et al. 2021 from VAST.
+
+Range edges are calculated by:
+
+1. Ordering spatial locations along a user-specified axis
+2. Calculating the cumulative proportion of total density along that axis
+3. Finding positions where the cumulative proportion equals target quantiles
+4. Using simulation from the joint precision matrix to quantify uncertainty
+
+The `predict()` function with `nsim > 0` returns a matrix where each column represents one simulation draw from the joint precision matrix.
+
+```{r}
+set.seed(123)
+pred_sims <- predict(fit, newdata = nd, nsim = 300)
+```
+
+Now we can calculate range edges along the latitude axis (Y coordinate). By default, `get_range_edge()` calculates the 2.5% and 97.5% quantiles, representing the lower and upper range edges. Here, we'll also add in the median (0.5) to find the center of the distribution.
+
+```{r range-edges}
+edges <- get_range_edge(pred_sims, axis = nd$Y, quantiles = c(0.05, 0.50, 0.95))
+head(edges)
+```
+
+The output includes:
+
+- `year`: the time slice
+- `quantile`: the quantile value (0.05 for lower edge, 0.500 for the median, 0.95 for upper edge)
+- `est`: the estimated position along the axis (latitude in this case)
+- `lwr` and `upr`: 90% confidence intervals for each quantile
+- `se`: standard error for each quantile
+
+# Visualizing range edges
+
+We can plot how the range edges change over time:
+
+```{r plot-custom-edges, fig.width=7, fig.asp=0.5}
+ggplot(edges, aes(year, est, colour = factor(quantile))) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = lwr, ymax = upr, fill = factor(quantile)),
+    alpha = 0.2,
+    colour = NA
+  ) +
+  labs(
+    x = "Year",
+    y = "Latitude (UTM km)",
+    colour = "Quantile",
+    fill = "Quantile"
+  ) +
+  scale_colour_discrete(labels = c("5%", "50%", "95%")) +
+  scale_fill_discrete(labels = c("5%", "50%", "95%"))
+```
+
+This plot shows how the northern and southern range edges of dogfish have shifted over time, with uncertainty bands reflecting sampling and estimation uncertainty. The median line represents the center of the distribution.
+
+# Accessing simulation draws
+
+For custom analyses, you can access the raw simulation draws:
+
+```{r sims}
+edges_sims <- get_range_edge(pred_sims, axis = nd$Y, return_sims = TRUE, quantiles = c(0.95))
+head(edges_sims)
+```
+
+This returns all simulation draws in long format, which can be useful for:
+
+- Custom uncertainty quantification
+- Calculating probabilities of range shifts
+- Comparing range edges between models or scenarios
+
+For example, we could calculate the probability that the upper range edge (northern edge) has shifted northward between two time periods:
+
+```{r prob-shift}
+# Extract simulations for upper edge in first and last year
+upper_first <- edges_sims |>
+  filter(quantile == 0.95, year == min(year))
+
+upper_last <- edges_sims |>
+  filter(quantile == 0.95, year == max(year))
+
+# Calculate shift for each simulation
+shifts <- upper_last$.value - upper_first$.value[match(upper_last$.iteration, upper_first$.iteration)]
+
+# Probability of northward shift
+prob_north <- mean(shifts > 0)
+cat("Probability of northward shift:", round(prob_north * 100, 1), "%\n")
+```
+
+We can plot that distribution:
+
+```{r prob-shift-hist}
+ggplot(data.frame(shifts = shifts), aes(shifts)) + geom_histogram()
+```
+
+If anything, the northern range has contracted here, which is consistent with previous research on this stock (Ward et al. 2024).
+
+# Other axes
+
+While we've demonstrated using latitude (Y), range edges can be calculated along any spatial axis. Choices include:
+
+- **Longitude (X)**: for east-west range shifts
+- **Depth**: for depth range edges (e.g., shallow vs. deep distribution limits)
+- **Coastal distance**: for offshore/onshore distribution patterns
+- **Temperature**: if you have environmental covariates in your prediction grid
+
+Simply provide the appropriate vector to the `axis` argument.
+
+E.g. here we can calculate the metrics for depth:
+
+```{r}
+depth_edges <- get_range_edge(pred_sims, axis = nd$depth, quantiles = c(0.05, 0.5, 0.95))
+
+ggplot(depth_edges, aes(year, -est, colour = as.factor(quantile))) +
+  geom_line() +
+  geom_ribbon(
+    aes(ymin = -lwr, ymax = -upr, fill = as.factor(quantile)),
+    alpha = 0.2,
+    colour = NA
+  ) +
+  labs(
+    x = "Year",
+    y = "Depth (m)",
+    colour = "Quantile",
+    fill = "Quantile"
+  ) +
+  scale_colour_discrete(labels = c("5%", "50%", "95%")) +
+  scale_fill_discrete(labels = c("5%", "50%", "95%"))
+```
+
+# Spatially varying trends
+
+Spatially varying coefficients (SVCs) let trends differ across space. Here we include a linear decade effect and allow its coefficient to vary spatially, highlighting where the strongest increases or decreases occur.
+
+See Barnett et al. 2021 and Davidson et al. 2025.
+
+```{r}
+dog <- dogfish
+dog$decade <- (dog$year - mean(dog$year))/10 # center and convert to decades
+fit_svc <- sdmTMB(
+  catch_weight ~ poly(log(depth), 2) + decade,
+  spatial_varying = ~ 0 + decade,
+  data = dog,
+  mesh = mesh,
+  family = delta_gengamma(type = "poisson-link"),
+  spatial = "on",
+  time = "year",
+  spatiotemporal = "off", # or "iid"
+  silent = FALSE
+)
+sanity(fit_svc)
+```
+
+```{r}
+fit_svc
+```
+
+```{r}
+nd_one_year <- filter(nd, year == max(nd$year))
+nd_one_year$decade <- (nd_one_year$year - mean(dog$year)) / 10
+pred_svc <- predict(fit_svc, newdata = nd_one_year)
+```
+
+To get the overall spatial trends, we need to combine the fixed and random effects from both linear predictors of the delta model. Because we used the Poisson-link, both are in log space and we can simply add them:
+
+```{r}
+fe1 <- coef(fit_svc, model = 1)[["decade"]]
+fe2 <- coef(fit_svc, model = 2)[["decade"]]
+pred_svc <- mutate(pred_svc, svc = fe1 + fe2 + zeta_s_decade1 + zeta_s_decade2)
+```
+
+```{r}
+ggplot(pred_svc, aes(X, Y, fill = exp(svc))) + geom_tile() +
+  scale_fill_gradient2(trans = "log10") +
+  labs(fill = "Multiplicative\nchange\nper decade")
+```
+
+# References
+
+Davidson, L.N.K., English, P.A., King, J., Grant, P., Taylor, I.G., Barnett, L., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2025. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the Northeast Pacific with little evidence for regional redistribution. Fish and Fisheries. <https://doi.org/10.1111/faf.70028>.
+
+Dunic, J.C., Conner, J., Anderson, S.C., and Thorson, J.T. 2025. The generalized gamma is a flexible distribution that outperforms alternatives when modelling catch rate data. ICES Journal of Marine Science 82(4): fsaf040. <https://doi.org/10.1093/icesjms/fsaf040>
+
+Fredston, A. L., Pinsky, M., Selden, R. L., Szuwalski, C., Thorson, J. T., Gaines, S. D., & Halpern, B. S. (2021). Range edges of North American marine species are tracking temperature over decades. *Global Change Biology*, 27(13), 3145-3156. <https://doi.org/10.1111/gcb.15614>
+
+Ward, E.J., Anderson, S.C., Barnett, L.A.K., English, P.A., Berger, H.M., Commander, C.J.C., Essington, T.E., Harvey, C.J., Hunsicker, M.E., Jacox, M.G., Johnson, K.F., Large, S., Liu, O.R., Richerson, K.E., Samhouri, J.F., Siedlecki, S.A., Shelton, A.O., Somers, K.A., and Watson, J.T. 2024. Win, lose, or draw: Evaluating dynamic thermal niches of northeast Pacific groundfish. PLOS Climate 3(11): e0000454. Public Library of Science. <https://doi.org/10.1371/journal.pclm.0000454>
+
+Thorson, J.T., Rindorf, A., Gao, J., Hanselman, D.H., and Winker, H. 2016. Density-dependent changes in effective area occupied for sea-bottom-associated marine fishes. Proceedings of the Royal Society B: Biological Sciences 283(1840): 20161853. Royal Society. <https://doi.org/10.1098/rspb.2016.1853>.
+
+Barnett, L.A.K., Ward, E.J., and Anderson, S.C. 2021. Improving estimates of species distribution change by incorporating local trends. Ecography 44(3): 427–439. <https://doi.org/10.1111/ecog.05176>
+
+
