@@ -2,3 +2,4 @@ exercises/*_files/
 .Rproj.user
 .claude
 admin
+slides/*_cache/
