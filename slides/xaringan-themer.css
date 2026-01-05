@@ -141,7 +141,7 @@ a, a > code {
 .title-slide {
   background-color: var(--title-slide-background-color);
   background-image: url("images/logo-sdmTMB.png");
-  background-size: 22%;
+  background-size: 26%;
   background-position: 50% 80%;
 }
 .title-slide .remark-slide-number {
