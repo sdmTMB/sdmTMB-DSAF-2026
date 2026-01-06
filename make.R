@@ -3,7 +3,7 @@ options(future.rng.onMisuse = "ignore")
 
 PARALLEL <- T
 BUILD_RMD <- T
-BUILD_QMD <- T
+BUILD_QMD <- F
 
 folder <- "."
 slides_folder <- "slides"
@@ -19,7 +19,8 @@ files
 qmd_files <- list.files(file.path(folder, "exercises"), pattern = "^0.*\\.qmd$")
 qmd_files <- gsub("\\.qmd$", "", qmd_files)
 qmd_files <- file.path("exercises", qmd_files)
-qmd_files <- qmd_files[!grepl("05-exercise-troubleshooting$", qmd_files)]
+qmd_files <- qmd_files[!grepl("05-exercise", qmd_files)]
+qmd_files <- qmd_files[!grepl("05b-exercise", qmd_files)]
 qmd_files
 
 rm <- function(x) if (file.exists(x)) file.remove(x)

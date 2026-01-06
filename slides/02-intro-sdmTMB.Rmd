@@ -106,7 +106,7 @@ pak::pak("pbs-assess/sdmTMB", dependencies = TRUE)
 
 5. Predict from the model: .blue[`predict()`], .blue[`simulate()`]
 
-6. Get derived quantities: .blue[`get_index()`, etc.]
+6. Get derived quantities: .blue[`get_index()`, `get_cog()`, `get_eao()`, `get_range_edge()`, `get_weighted_average()`, ...]
 
 <!-- <img src="images/sdmTMB_workflow.png" height = "500px" width="900px" /> -->
 

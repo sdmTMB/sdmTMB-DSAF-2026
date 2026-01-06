@@ -33,37 +33,25 @@ library(mgcv)
 
 ---
 
-# Who you are
-
-1. Name
-
-2. What you work on
-
-3. Experience level with sdmTMB or related VAST/INLA models
-
-4. Anything in particular you hope to get out of the course
-
----
-
 # Plan for the 3-day course
 
 Day 1: Intro to random fields, intro to sdmTMB, spatial models, spatiotemporal models, model comparison/validation, residuals
 
 --
 
-Day 2: Families, delta models, time-varying effects, spatially varying effects, index standardization, speed talks
+Day 2: Families, delta models, time-varying effects, spatially varying effects, index standardization, metrics of distribution change
 
 --
 
-Day 3: Integrated models, forecasting, simulating, touch on other advanced topics (correlation barriers, presence-only data, priors), speed talks, Q/A and advice
+Day 3: Integrated models, forecasting, simulating
 
 ---
 
 # Plan for the course
 
-Each day: a mix of lectures and exercises, breaks as needed, two hour-long speed-talk sessions
+Each day: a mix of lectures and exercises, breaks as needed, talks on applied sdmTMB uses
 
-Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/1tCldIs2B9-AeCZM-6ss8Qhn2MSw4wtxKuXkjoRzgneg/edit?tab=t.0). Thanks!
+Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/19zveT73HVWa73UhxsAcDntAhrBDX_F327otqve7RQ4Y/edit?usp=sharing). Thanks!
 
 ---
 
