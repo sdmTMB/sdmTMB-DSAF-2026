@@ -26,19 +26,21 @@ library(sdmTMB)
 library(ggplot2)
 ```
 
-# sdmTMB origins
+### sdmTMB origins
 
-A need for reproducible code and methods for assessments [(Anderson et al. 2019)](https://www.dfo-mpo.gc.ca/csas-sccs/Publications/ResDocs-DocRech/2019/2019_041-eng.html)
+.xsmall[
+A need for reproducible methods and simple code for assessments [(Anderson et al. 2019)](https://github.com/pbs-assess/gfsynopsis)
+]
 
 .center[
-<img src="images/yellowtail_synopsis.png" width="450px" height = "400px"/>
+<img src="images/synopsis-lingcod.png" width="56%" />
 ]
 
 ---
 
 # sdmTMB highlights
 
-* sdmTMB is a user-friendly R package for modeling spatial processes
+* A user-friendly R package for modeling spatial processes
 
 --
 
@@ -184,6 +186,72 @@ mesh$mesh$n
 plot(mesh)
 ```
 ]
+
+---
+
+# Mesh construction
+
+.xsmall[
+* A unique mesh is generally made for each dataset
+* Rules of thumb:
+  * More triangles = more computation time
+  * More triangles = more fine-scale spatial predictions
+  * Finer resolution isn't always better
+  * Borders with coarser resolution reduce number of triangles
+  * Use minimum edge size (cutoff) to avoid meshes becoming too fine
+  * Triangle edge size needs to be smaller than spatial range
+
+* "How to make a bad mesh?" [Haakon Bakka's book](https://haakonbakkagit.github.io/btopic114.html)
+]
+
+---
+
+# Building your own mesh
+
+* E.g., `fmesher::fm_mesh_2d()`: lets many arguments be customized
+
+* `INLA::meshbuilder()`: Shiny app for constructing a mesh, provides R code
+
+* Meshes can include barriers / islands / coastlines with shapefiles
+
+* INLA books
+<https://www.r-inla.org/learnmore/books>
+
+---
+
+# Example: cutoff = 50km
+
+```{r mesh-example4, fig.width=6.5}
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 50)
+ggplot() +
+  inlabru::gg(mesh$mesh) +
+  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
+  coord_equal()
+```
+
+---
+
+# Example: cutoff = 25km
+
+```{r mesh-example3, fig.width=6.5}
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 25)
+ggplot() +
+  inlabru::gg(mesh$mesh) +
+  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
+  coord_equal()
+```
+
+---
+
+# Example: cutoff = 10km
+
+```{r mesh-example2, fig.width=6.5}
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)
+ggplot() +
+  inlabru::gg(mesh$mesh) +
+  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
+  coord_equal()
+```
 
 ---
 

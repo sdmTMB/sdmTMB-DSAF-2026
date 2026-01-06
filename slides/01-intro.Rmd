@@ -33,7 +33,7 @@ library(mgcv)
 
 ---
 
-# Plan for the 3-day course
+# Plan for the 3-day workshop
 
 Day 1: Intro to random fields, intro to sdmTMB, spatial models, spatiotemporal models, model comparison/validation, residuals
 
@@ -47,7 +47,7 @@ Day 3: Integrated models, forecasting, simulating
 
 ---
 
-# Plan for the course
+# Plan for the workshop
 
 Each day: a mix of lectures and exercises, breaks as needed, talks on applied sdmTMB uses
 
@@ -61,11 +61,15 @@ Species distributions are changing in response to climate, fishing pressure, and
 
 --
 
-Management and conservation is aided by understanding how distributions are changing and may change in the future
+Management and conservation are aided by understanding how distributions are changing and may change in the future
 
 --
 
 Cross-border coordination requires understanding range-wide distributions
+
+--
+
+Shifting distributions can cross management boundaries, affecting quota allocations
 
 ---
 
@@ -79,7 +83,15 @@ Sampling effort varies spatially and temporally
 
 --
 
+Even faithfully implemented random or random stratified designs introduce spatial sampling noise
+
+--
+
 We often want to combine multiple surveys
+
+--
+
+Different surveys may use different gear, vessels, or protocols
 
 --
 
@@ -87,13 +99,25 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 
 ---
 
+### Species ranges often cover multiple surveys
+
+.pull-left[
+<img src="images/survey-join-map.png" width="60%" />
+]
+
+.pull-right[
+<img src="images/dogfish-svc-simple.png" width="60%" />
+]
+
+---
+
 # The solution: model-based metrics
 
 .large[
-1. Fit a spatially explicit model
+1. Fit a statistical spatiotemporal species distribution model
 
-2. Predict to a constant grid
-(standardizes for spatial variation in sampling)
+2. Predict to a constant spatial grid
+(standardizes for spatial, gear, and effort variation in sampling)
 
 3. Calculate metrics from those predictions with uncertainty
 ]
@@ -112,6 +136,8 @@ Range edges
 Effective area occupied
 
 Spatially varying trends
+
+Subregional population indices
 ]
 
 ---
@@ -119,9 +145,11 @@ Spatially varying trends
 # Fitting a useful model
 
 .large[
-To calculate distribution metrics reliably, we need to understand how to properly fit models to large spatiotemporal survey datasets.
+To calculate reliable distribution metrics, we need to understand how to fit models to large spatiotemporal survey datasets.
 
 How do we handle these data?
+
+A key challenge: spatial correlation.
 ]
 
 ---
@@ -667,7 +695,7 @@ ggplot(sim_dat, aes(X, Y, col = observed)) +
 
 class: center, middle, inverse
 
-# SPDE approach: what you need to know<br>(*and a bit extra in case you find this stuff thrilling*)
+# SPDE approach: what you need to know<br>(*and a bit extra in case you find this stuff thrilling* 🤓)
 
 ---
 
@@ -733,81 +761,6 @@ Miller, D.L., Glennie, R., and Seaton, A.E. 2019. Understanding the Stochastic P
 The SPDE approach involves a triangulation over the area of interest; we call this a "mesh" or more accurately a "finite element mesh".
 
 ```{r mesh-example, fig.width=5}
-mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)
-ggplot() +
-  inlabru::gg(mesh$mesh) +
-  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
-  coord_equal()
-```
-
----
-
-# Mesh construction
-
-.xsmall[
-* A unique mesh is generally made for each dataset
-* Rules of thumb:
-  * More triangles = more computation time
-  * More triangles = more fine-scale spatial predictions
-  * Finer resolution isn't always better
-  * Borders with coarser resolution reduce number of triangles
-  * Use minimum edge size (cutoff) to avoid meshes becoming too fine
-  * Triangle edge size needs to be smaller than spatial range
-
-* "How to make a bad mesh?" [Haakon Bakka's book](https://haakonbakkagit.github.io/btopic114.html)
-]
-
----
-
-# Building your own mesh
-
-* E.g., `fmesher::fm_mesh_2d()`: lets many arguments be customized
-
-* `INLA::meshbuilder()`: Shiny app for constructing a mesh, provides R code
-
-* Meshes can include barriers / islands / coastlines with shapefiles
-
-* INLA books
-<https://www.r-inla.org/learnmore/books>
-
----
-
-# Simplifying mesh construction in sdmTMB
-
-sdmTMB has a function `make_mesh()` to quickly construct a basic mesh
-
-But sdmTMB can also work with any fancier fmesher package meshes.
-
----
-
-# Example: cutoff = 50km
-
-```{r mesh-example4, fig.width=6.5}
-mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 50)
-ggplot() +
-  inlabru::gg(mesh$mesh) +
-  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
-  coord_equal()
-```
-
----
-
-# Example: cutoff = 25km
-
-```{r mesh-example3, fig.width=6.5}
-mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 25)
-ggplot() +
-  inlabru::gg(mesh$mesh) +
-  geom_point(data = pcod, aes(x = X, y = Y), alpha = 0.1, pch = 20) +
-  coord_equal()
-```
-
----
-
-
-# Example: cutoff = 10km
-
-```{r mesh-example2, fig.width=6.5}
 mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)
 ggplot() +
   inlabru::gg(mesh$mesh) +
