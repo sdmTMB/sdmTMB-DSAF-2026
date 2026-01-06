@@ -593,36 +593,6 @@ cowplot::plot_grid(g1, g2, nrow = 2, align = "v")
 
 2.  How could we pick between these models?
 
-# Spatially varying coefficients
-
-Let's try fitting a spatially varying coefficient (SVC) for year. If year is our covariate, we can interpret this as a local proportional change per year.
-
-We'll start by (roughly) centering our year predictor to make it more computationally stable.
-
-```{r}
-dat$year_centered <- dat$year - 2012
-fit_svc <- sdmTMB(
-  density ~ year_centered,
-  data = dat,  
-  family = tweedie(link = "log"),
-  mesh = mesh,
-  spatial = "on",
-  spatial_varying = ~ year_centered, #<
-  # silent = FALSE
-)
-
-grid$year_centered <- grid$year - 2012
-p_svc <- predict(fit_svc, newdata = grid)
-ggplot(p_svc, aes(X, Y, fill = exp(est))) +
-  geom_raster() +
-  scale_fill_gradient2(trans = "log10") +
-  coord_fixed()
-```
-
-## Exercise:
-
-1.  What are we looking at and what does it mean?
-
 # Bonus
 
 ## Exercise:
@@ -643,7 +613,7 @@ fit2 <- sdmTMB(
   time = "year",
   anisotropy = TRUE,
   # silent = FALSE,
-  # share_range =   # exercise
+  # share_range = FALSE
 )
 # plot_anisotropy(fit2)
 ```
