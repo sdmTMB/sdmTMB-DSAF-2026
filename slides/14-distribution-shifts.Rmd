@@ -68,7 +68,7 @@ Several spatial patterns can create the same center of gravity
 ]
 
 .tiny[
-See for review of 1980s/90s citations: Woillez, M., Poulard, J.-C., Rivoirard, J., Petitgas, P., and Bez, N. 2007. Indices for capturing spatial patterns and their evolution in time, with application to European hake (Merluccius merluccius) in the Bay of Biscay. ICES J Mar Sci 64(3): 537–550. https://doi.org/10.1093/icesjms/fsm025>.
+See for review of 1980s/90s citations: Woillez, M., Poulard, J.-C., Rivoirard, J., Petitgas, P., and Bez, N. 2007. Indices for capturing spatial patterns and their evolution in time, with application to European hake (Merluccius merluccius) in the Bay of Biscay. ICES J Mar Sci 64(3): 537–550. <https://doi.org/10.1093/icesjms/fsm025>.
 
 The GMRF model-based version we're doing here: Thorson, J.T., Pinsky, M.L., and Ward, E.J. 2016. Model-based inference for estimating shifts in species distribution, area occupied and centre of gravity. Methods Ecol Evol 7(8): 990–1002. <https://doi.org/10.1111/2041-210X.12567>.
 ]
