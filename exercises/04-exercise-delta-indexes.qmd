@@ -81,13 +81,14 @@ fit_tweedie
 
 # Fitting a delta model
 
-Delta (or hurdle) models have one model for zero vs. non-zero data and another component for the positive component. These models can be implemented by fitting the two components separately and combining the predictions or they can be fit at once in sdmTMB.
+Delta (or hurdle) models have one model for zero vs. non-zero data and another component for the positive component. Some of these delta models can be implemented by fitting the two components separately and combining the predictions or they can be fit at once in sdmTMB.
 
 Advantages of fitting them at once:
 
 -   easier to code
 -   some parameters can be shared
 -   derived quantities (e.g., an index of abundance) can be calculated on the combined prediction
+-   some (e.g., Poisson-link delta models) must be fit at once because the linear predictors are linked
 
 Disadvantages to fitting them all at once:
 
@@ -366,20 +367,11 @@ ggplot(index_dg, aes(year, est)) +
 Let's see if this index differs from what it would look like using the Tweedie model.
 
 ```{r}
-new_grid <- dplyr::filter(grid, Y < 5450)
-
-
-
-
-
 p_tw <- predict(fit_tweedie, newdata = new_grid, return_tmb_object = TRUE)
 index_tw <- get_index(p_tw, area = new_grid$cell_area, bias_correct = TRUE)
 
-
 p_tw <- predict(fit_tweedie, newdata = grid, return_tmb_object = TRUE)
 index_tw <- get_index(p_tw, area = grid$cell_area, bias_correct = TRUE)
-
-?sdmTMB::get_index_sims()
 
 index_dg$Method <- "Delta-gamma"
 index_tw$Method <- "Tweedie"
