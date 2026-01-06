@@ -9,10 +9,10 @@ execute:
 
 # Goals:
 
-- Understand the spatial range.
-- Become familiar with spatial random fields through simulation.
-- Become familiar with spatiotemporal random fields and how they can combine with spatial random fields.
-- Understand how correlation in spatiotemporal random fields looks.
+-   Understand the spatial range.
+-   Become familiar with spatial random fields through simulation.
+-   Become familiar with spatiotemporal random fields and how they can combine with spatial random fields.
+-   Understand how correlation in spatiotemporal random fields looks.
 
 ```{r}
 #| echo=FALSE
@@ -63,15 +63,15 @@ plot(mesh)
 
 The basic function for simulating random fields from scratch in sdmTMB is `sdmTMB_simulate()`.
 
-- The formula here contains only an intercept but could include covariates.
+-   The formula here contains only an intercept but could include covariates.
 
-- The family is Gaussian to specify that we simulate a normally distributed response.
+-   The family is Gaussian to specify that we simulate a normally distributed response.
 
-- The range (see above) is 0.6.
+-   The range (see above) is 0.6.
 
-- The two important standard deviation parameters are `sigma_O` (controlling the marginal standard deviation of `omega_s`, the spatial random field values) and `phi` (controlling the observation error standard deviation).
+-   The two important standard deviation parameters are `sigma_O` (controlling the marginal standard deviation of `omega_s`, the spatial random field values) and `phi` (controlling the observation error standard deviation).
 
-- We are plotting `observed` (observed values: the expected value plus observation error).
+-   We are plotting `observed` (observed values: the expected value plus observation error).
 
 ```{r}
 sim_dat <- sdmTMB_simulate(
