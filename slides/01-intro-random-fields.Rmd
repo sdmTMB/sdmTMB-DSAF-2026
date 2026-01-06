@@ -55,6 +55,77 @@ Have questions? Please ask any time or in the [Google Doc](https://docs.google.c
 
 ---
 
+# Why study distribution shifts?
+
+Species distributions are changing in response to climate, fishing pressure, and habitat changes
+
+--
+
+Management and conservation is aided by understanding how distributions are changing and may change in the future
+
+--
+
+Cross-border coordination requires understanding range-wide distributions
+
+---
+
+# The challenge
+
+Surveys don't always cover the same areas every year
+
+--
+
+Sampling effort varies spatially and temporally
+
+--
+
+We often want to combine multiple surveys
+
+--
+
+Raw survey catch data can't reliably tell us about true distribution changes vs. sampling artifacts
+
+---
+
+# The solution: model-based metrics
+
+.large[
+1. Fit a spatially explicit model
+
+2. Predict to a constant grid
+(standardizes for spatial variation in sampling)
+
+3. Calculate metrics from those predictions with uncertainty
+]
+
+---
+
+# Metrics we'll focus on
+
+.large[
+Center of gravity
+
+Density-weighted habitat variables
+
+Range edges
+
+Effective area occupied
+
+Spatially varying trends
+]
+
+---
+
+# Fitting a useful model
+
+.large[
+To calculate distribution metrics reliably, we need to understand how to properly fit models to large spatiotemporal survey datasets.
+
+How do we handle these data?
+]
+
+---
+
 # Motivating questions
 
 Data often have spatial attributes
