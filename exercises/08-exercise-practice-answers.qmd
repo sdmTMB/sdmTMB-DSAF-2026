@@ -289,7 +289,7 @@ ggplot(edges, aes(year, y = est, ymin = lwr, ymax = upr, group = quantile)) +
 
 # Calculating a subregional index
 
-Try calculating an index for the northern half of Queen Charlotte Sound (> 5725 UTMs) and the souther half (<= 5725 UTMs).
+Try calculating an index for the northern half of Queen Charlotte Sound (\> 5725 UTMs) and the souther half (\<= 5725 UTMs).
 
 ```{r}
 grid_north <- filter(grid, Y > 5725)
@@ -307,4 +307,3 @@ index_south <- get_index(pred_south, area = 4, bias_correct = TRUE) # answer
 ggplot(index_north, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
 ggplot(index_south, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
 ```
-
