@@ -27,12 +27,6 @@ library(ggplot2)
 library(mgcv)
 ```
 
-# Who we are
-
-<img src="images/intro_slide.jpg" width="800px" class="center" />
-
----
-
 # Plan for the 3-day workshop
 
 Day 1: Intro to random fields, intro to sdmTMB, spatial models, spatiotemporal models, model comparison/validation, residuals
@@ -73,7 +67,7 @@ Shifting distributions can cross management boundaries, affecting quota allocati
 
 ---
 
-# The challenge
+### We have wonderful scientific surveys, but...
 
 Surveys don't always cover the same areas every year
 
@@ -114,12 +108,12 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 # The solution: model-based metrics
 
 .large[
-1. Fit a statistical spatiotemporal species distribution model
+1. Fit a statistical spatiotemporal ("dynamic") species distribution model
 
 2. Predict to a constant spatial grid
 (standardizes for spatial, gear, and effort variation in sampling)
 
-3. Calculate metrics from those predictions with uncertainty
+3. Calculate distribution metrics from those predictions with uncertainty
 ]
 
 ---
@@ -142,24 +136,85 @@ Subregional population indices
 
 ---
 
-# Fitting a useful model
+class: center, middle, inverse
 
-.large[
-To calculate reliable distribution metrics, we need to understand how to fit models to large spatiotemporal survey datasets.
-
-How do we handle these data?
-
-A key challenge: spatial correlation.
-]
+# The first and most complicated part:<br><br>Fitting a useful model
 
 ---
 
-# Motivating questions
+# Fitting a useful model
+
+To calculate reliable distribution metrics, we need to understand how to fit models to large spatiotemporal survey datasets
+
+--
+
+Spatial data has challenges to modelling
+
+--
+
+Temporal data has challenges to modelling
+
+--
+
+Spatiotemporal data has *a lot* to think to think about when modelling
+
+--
+
+That's going to be the focus of much of this workshop
+
+---
+
+class: center, middle, inverse
+
+# To make reliable inference on species distribution changes, we first need a good model-based representation of species distribution
+
+---
+
+# Geostatistical data
+
+We're focused on **geostatistical** data: observations of a continuous spatial process at georeferenced locations
+
+--
+
+I.e., we pick spatial coordinates to sample at and observe something, like the number or weight of fish (as opposed to "point process" data or "areal" data)
+
+```{r field-samples, fig.asp=0.4}
+set.seed(123)
+predictor_dat <- data.frame(
+  X = runif(300), Y = runif(300),
+  year = 1
+)
+mesh <- make_mesh(predictor_dat,
+  xy_cols = c("X", "Y"),
+  cutoff = 0.1
+)
+sim_dat <- sdmTMB_simulate(
+  formula = ~1,
+  data = predictor_dat,
+  time = "year",
+  mesh = mesh,
+  family = lognormal(),
+  range = 0.3,
+  sigma_E = 0,
+  phi = 0.05,
+  sigma_O = 0.6,
+  seed = 7,
+  B = c(0) # B0 = intercept
+)
+ggplot(sim_dat, aes(X, Y, col = observed * 10)) +
+  geom_point(alpha = 0.9, size = 3) +
+  scale_colour_viridis_c() +
+  labs(colour = "Observed\ncatch weight")
+```
+
+---
+
+# Modelling spatial data
 
 Data often have spatial attributes
 
 Ideal world:
-  1. Plug spatial covariates into a GLM / GLMM
+  1. Plug spatial covariates into a regression model
   2. Residuals are uncorrelated
 
 ```{r sim-rf-intro, echo=FALSE, fig.asp=0.4}
@@ -200,7 +255,7 @@ Residual spatial autocorrelation is pervasive.
 
 --
 
-Alternatively, there are unmodelled, missing, or "latent" spatially structured variables.
+Alternatively, there are unmodelled, missing, or "latent" spatially structured covariates
 
 ```{r sim-rf-intro-cor, echo=FALSE, fig.asp=0.4}
 set.seed(123)
@@ -231,6 +286,20 @@ ggplot(sim_dat, aes(X, Y, col = observed)) +
   guides(col=guide_legend(title="Residuals")) +
   scale_color_gradient2()
 ```
+
+---
+
+# Why worry about these latent spatial variables?
+
+1. Often they are of ecological interest
+
+--
+
+2. Ignoring them hurts our predictions
+
+--
+
+3. Ignoring them messes up our quantification of uncertainty
 
 ---
 
@@ -268,44 +337,6 @@ Random fields are nice because
 --
 
 3. They estimate ecologically interpretable parameters
-
----
-
-# Spatial data types
-
-### Areal/Lattice
-
-Values are observed on a grid or set of subregion polygons (e.g., interpolated SST from satellite observations, commercial catch records by state/county).
-
---
-
-### Point Process
-
-Observations of a continuous spatial process where the variable of interest is the location of the events.
-
-.tiny[
-Renner, I.W., Elith, J., Baddeley, A., Fithian, W., Hastie, T., Phillips, S.J., Popovic, G., and Warton, D.I. 2015. Point process models for presence‐only analysis. Methods Ecol Evol 6(4): 366–379.
-]
-
----
-
-# Spatial data types
-
-### Geostatistical
-
-Observations of a continuous spatial process observed at a chosen set of points. .tiny[*We're focusing on geostatistical models.]
-
-Data are georeferenced: observations are associated with latitude and longitude. Locations may be unique or repeated (stations)
-
----
-
-# Why is space important?
-
-Data covary spatially (data that are closer are more similar)
-
---
-
-Ignoring this hurts our predictions and messes up our quantification of uncertainty
 
 ---
 
@@ -359,8 +390,6 @@ background-size: 35%
 
 A 2 dimensional "Gaussian Process".
 
---
-
 A realization from a multivariate normal distribution constrained by some covariance function.
 
 ---
@@ -380,7 +409,6 @@ Alternatively, a way of estimating a wiggly surface to account for unobserved sp
 
 As a bonus, it provides useful parameter estimates: spatial variance (magnitude of wiggles) and the rate at which data become uncorrelated with distance (how smooth are the wiggles).
 
-<!-- TODO: include nugget / sill? Show slide with semivariogram image? -->
 ---
 
 # Correlation/covariance functions
@@ -465,10 +493,10 @@ df <- dplyr::group_by(df, row) |>
   )
 df$nu <- as.factor(df$nu)
 ggplot(df, aes(x, cov, col = nu, group = nu)) +
-  geom_line(size = 1.3, alpha = 0.8) +
+  geom_line() +
   xlab("Distance") +
-  ylab("Covariance") +
-  ggtitle("Matérn covariance") +
+  ylab("Correlation") +
+  scale_color_viridis_d() +
   guides(col = guide_legend(title = expression(nu))) +
   coord_cartesian(expand = FALSE)
 ```
