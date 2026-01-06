@@ -75,14 +75,10 @@ Fit a spatial model with a Tweedie family:
 ```{r}
 fit_spatial <- sdmTMB(
   catch_weight ~ 0 + as.factor(year),
-  spatial = "on", # answer
-# spatial = , # exercise
+  spatial = , # exercise
   offset = log(d$area_swept),
-  family = tweedie(), # answer
-# family =  , # exercise
-  mesh = mesh, # answer
-# mesh =  , # exercise
-  data = d, # answer
+  family =  , # exercise
+  mesh =  , # exercise
   silent = FALSE
 )
 ```
@@ -95,7 +91,6 @@ fit_spatial
 Calculate theoretical quantile residuals (see `residuals.sdmTMB`; the `residuals()` method) and assign them to a new column `resid_sp` in `d`:
 
 ```{r}
-d$resid_sp <- residuals(fit_spatial) # answer
 
 ggplot(d, aes(X, Y, colour = resid_sp)) +
   geom_point() +
@@ -119,12 +114,7 @@ Add IID spatiotemporal fields:
 ```{r}
 fit <- sdmTMB(
   catch_weight ~ 0 + as.factor(year),
-  time = "year", # answer
-  spatial = "on", # answer
-  spatiotemporal = "iid", # answer
   offset = log(d$area_swept),
-  family = tweedie(), # answer
-  mesh = mesh, # answer
   data = d,
   silent = FALSE
 )
@@ -153,8 +143,7 @@ Calculate randomized quantile residuals into an object `resid`:
 
 ```{r}
 set.seed(1)
-resid <- residuals(fit, type = "mle-mvn") # answer
-#resid <-  # exercise
+resid <-  # exercise
 ```
 
 How do the basic randomized quantile residuals look for the overall model? Is this better than the model with spatial random fields only? Why?
@@ -167,8 +156,7 @@ abline(0, 1)
 Predict on the newdata `grid` and set `return_tmb_object = TRUE`. Save the output to `pred`:
 
 ```{r}
-pred <- predict(fit, newdata = grid, return_tmb_object = TRUE) # answer
-# pred <-  # exercise
+pred <-  # exercise
 ```
 
 Because we set `return_tmb_object = TRUE`, the prediction data frame is in the list element `data`.
@@ -222,8 +210,7 @@ ggplot(pred$data, aes(X, Y, fill = exp(est))) +
 Use `get_index()` to calculate an area-weighted biomass index. Save the output to `ind`.
 
 ```{r}
-ind <- get_index(pred, area = 4, bias_correct = TRUE) # answer
-# ind <-  # exercise
+ind <-  # exercise
 ```
 
 ```{r}
@@ -237,8 +224,7 @@ ggplot(ind, aes(year, y = est, ymin = lwr, ymax = upr)) +
 Use `get_cog()` to calculate the center of gravity (biomass-weighted mean latitude and longitude). You can set `bias_correct = FALSE` so this exercise is a bit faster. Save the output to `cog`. I suggest using `format = "wide"` because it will make plotting easier here.
 
 ```{r}
-cog <- get_cog(pred, area = 4, bias_correct = FALSE, format = "wide") # answer
-# cog <-  # exercise
+cog <-  # exercise
 
 ggplot(cog, aes(est_x, est_y, colour = year)) +
   geom_point() +
@@ -252,8 +238,7 @@ ggplot(cog, aes(est_x, est_y, colour = year)) +
 Try calculating biomass-weighted mean depth. The depth vector is in `grid$depth`. Use `get_weighted_average()`.
 
 ```{r}
-mean_depth <- get_weighted_average(pred, area = 4, vector = grid$depth) # answer
-# mean_depth <- # exercise
+mean_depth <- # exercise
 
 ggplot(mean_depth, aes(year, y = est, ymin = lwr, ymax = upr)) +
   geom_pointrange()
@@ -264,8 +249,7 @@ ggplot(mean_depth, aes(year, y = est, ymin = lwr, ymax = upr)) +
 Try calculating effective area occupied with `get_eao()`. Don't forget to specify the cell area (2 x 2 km = 4 km^2^ here).
 
 ```{r}
-eao <- get_eao(pred, area = 4) # answer
-# eao <-  # exercise
+eao <-  # exercise
 
 ggplot(eao, aes(year, y = est, ymin = lwr, ymax = upr)) +
   geom_pointrange()
@@ -279,8 +263,7 @@ Try the 97.5% and 2.5% range edges with `get_range_edge()`. Remember that `get_r
 pred_sim <- predict(fit, newdata = grid, nsim = 200)
 dim(pred_sim)
 
-edges <- get_range_edge(pred_sim, axis = grid$Y) # answer
-# edges <- get_range_edge(pred_sim, axis = ) # exercise
+edges <- get_range_edge(pred_sim, axis = ) # exercise
 
 ggplot(edges, aes(year, y = est, ymin = lwr, ymax = upr, group = quantile)) +
   geom_ribbon(fill = "grey90") +
@@ -298,11 +281,9 @@ grid_south <- filter(grid, Y <= 5725)
 pred_north <- predict(fit, newdata = grid_north, return_tmb_object = TRUE)
 pred_south <- predict(fit, newdata = grid_south, return_tmb_object = TRUE)
 
-# index_north <- # exercise
-# index_south <- # exercise
+index_north <- # exercise
+index_south <- # exercise
 
-index_north <- get_index(pred_north, area = 4, bias_correct = TRUE) # answer
-index_south <- get_index(pred_south, area = 4, bias_correct = TRUE) # answer
 
 ggplot(index_north, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
 ggplot(index_south, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
