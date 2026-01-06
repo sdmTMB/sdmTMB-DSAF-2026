@@ -1,5 +1,5 @@
 ---
-title: "Introduction to the course, random fields, and the SPDE"
+title: "Introduction to the workshop, random fields, and the SPDE"
 subtitle: "DFO DSAF workshop"
 author: ""
 institute: ""
