@@ -28,7 +28,7 @@ January 12-14 2026
 
 ### Slides:
 
-1. [Introduction to the course, random fields, and the SPDE](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/01-intro-random-fields.html)
+1. [Introduction to the course, random fields, and the SPDE](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/01-intro.html)
 
 2. [Introduction to sdmTMB](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/02-intro-sdmTMB.html)
 
