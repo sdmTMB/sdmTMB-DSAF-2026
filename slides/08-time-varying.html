@@ -76,9 +76,6 @@ Defined by `time_varying` argument
 
 Takes a *one-sided* formula, e.g. `~ 1` or `~ 0 + depth`
 
-Note: initial coefficient is unconstrained, i.e. **do not place the same covariate in 
-the `formula` argument** (this includes the intercept)
-
 ---
 
 # Time-varying intercept
@@ -101,7 +98,7 @@ fit &lt;- sdmTMB(
 .xsmall[
 Note: a `0` or `-1` in formula for suppressing global intercept in this case
 
-`time_varying_type = "rw"` (default) estimates the first time step as independent
+`time_varying_type = "rw"` (default) estimates the first time step as independent. I.e. **do not place the same covariate in the `formula` argument** (this includes the intercept). This does not apply to other time-varying types in sdmTMB. Sorry!
 
 Also `"ar1"` or `"rw0"`
 ]

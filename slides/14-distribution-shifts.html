@@ -53,7 +53,7 @@ Spatially varying trends
 # General idea throughout
 
 .large[
-1. Fit a reasonable spatiotemporal model
+1. Fit a reasonable spatiotemporal model (😮‍💨)
 
 2. Predict to a constant grid over the spatial domain
 (standardizes for spatial variation in sampling, combining data sources, etc.)
@@ -245,8 +245,17 @@ Barnett, L.A.K., Ward, E.J., and Anderson, S.C. 2021. Improving estimates of spe
 Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. &lt;https://doi.org/10.1111/faf.70028&gt;.
 ]
 
+---
 
+# Subregional indices of abundance
 
+Split up the surveyed area into areas of interest
+
+E.g., north/south, or clusters from spatially varying trends ([Barnett et al. (2021)](https://doi.org/10.1111/ecog.05176))
+
+Run `predict()` and `get_index()` (or `get_cog() etc.) on each subsetted grid.
+
+Integrates index, or center of gravity, etc. over smaller areas to tell a nuanced story
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
