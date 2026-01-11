@@ -48,9 +48,11 @@ A need for reproducible methods and simple code for assessments [(Anderson et al
 
 # sdmTMB contributors
 
-&lt;img src="images/intro_slide.jpg" width="80%" class="center" /&gt;
+.center[
+&lt;img src="images/intro_slide2.jpg" width="85%" /&gt;
+]
 
-And *many* more! Including Jillian Dunic, Julia Indivero, Joe Watson, Joseph Barss, Cole Monnahan, with code adapted from glmmTMB, mgcv, and brms
+And many more! Including Julia Indivero, Joe Watson, Cole Monnahan, Joseph Barss, with code adapted from VAST, glmmTMB, mgcv, and brms
 
 ---
 
@@ -232,6 +234,9 @@ plot(mesh)
 * "How to make a bad mesh?" [Haakon Bakka's book](https://haakonbakkagit.github.io/btopic114.html)
 ]
 
+.tiny[
+Ward, E.J. and Anderson, S.C. 2025. Approximating spatial processes with too many knots degrades the quality of probabilistic predictions. bioRxiv. &lt;https://doi.org/10.1101/2025.11.14.688354&gt;.
+]
 ---
 
 # Building your own mesh
@@ -417,19 +422,7 @@ All have `link` arguments
   
 See `?sdmTMB::Families`
 
----
-
-# An aside on the Tweedie
-
-.small[
-Useful for positive continuous data with zeros (e.g., biomass density per unit effort) 
-
-Dispersion ( `\(\phi\)` ) and power ( `\(p\)` ) parameters allow for a wide variety of shapes including many zeros
-
-Also known as compound Poisson-Gamma distribution
-]
-
-&lt;img src="02-intro-sdmTMB_files/figure-html/sim-tweedie-1.png" width="400px" style="display: block; margin: auto;" /&gt;
+We will cover less-common but useful families later
 
 ---
 
@@ -538,7 +531,7 @@ fit &lt;- sdmTMB(
   * If the data are collected in both space and time *and* 
     there are 'latent' spatial processes that vary through time
   * E.g., effect of water temperature on abundance if temperature wasn't in the model
-  * Represents all the missing variables that vary through time
+  * Represents all the missing spatial variables that vary through time
 
 --
 

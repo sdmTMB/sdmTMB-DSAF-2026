@@ -40,9 +40,11 @@ A need for reproducible methods and simple code for assessments [(Anderson et al
 
 # sdmTMB contributors
 
-<img src="images/intro_slide.jpg" width="80%" class="center" />
+.center[
+<img src="images/intro_slide2.jpg" width="85%" />
+]
 
-And *many* more! Including Jillian Dunic, Julia Indivero, Joe Watson, Joseph Barss, Cole Monnahan, with code adapted from glmmTMB, mgcv, and brms
+And many more! Including Julia Indivero, Joe Watson, Cole Monnahan, Joseph Barss, with code adapted from VAST, glmmTMB, mgcv, and brms
 
 ---
 
@@ -212,6 +214,9 @@ plot(mesh)
 * "How to make a bad mesh?" [Haakon Bakka's book](https://haakonbakkagit.github.io/btopic114.html)
 ]
 
+.tiny[
+Ward, E.J. and Anderson, S.C. 2025. Approximating spatial processes with too many knots degrades the quality of probabilistic predictions. bioRxiv. <https://doi.org/10.1101/2025.11.14.688354>.
+]
 ---
 
 # Building your own mesh
@@ -428,30 +433,7 @@ All have `link` arguments
   
 See `?sdmTMB::Families`
 
----
-
-# An aside on the Tweedie
-
-.small[
-Useful for positive continuous data with zeros (e.g., biomass density per unit effort) 
-
-Dispersion ( $\phi$ ) and power ( $p$ ) parameters allow for a wide variety of shapes including many zeros
-
-Also known as compound Poisson-Gamma distribution
-]
-
-```{r sim-tweedie, fig.width=4, out.width='400px'}
-set.seed(123)
-r1 <- fishMod::rTweedie(20000, mu = 3, phi = 0.1, p = 1.3)
-r2 <- fishMod::rTweedie(20000, mu = 3, phi = 1.5, p = 1.3)
-df <- data.frame(y = c(r1, r2), phi = sort(rep(c("0.1", "1.5"), length(r1))))
-df$phi <- paste("Dispersion (phi) =", df$phi)
-ggplot(df, aes(y)) +
-  geom_histogram(bins = 200) +
-  ylab("Density") +
-  facet_wrap(~phi, ncol = 1, scale = "free_y") +
-  coord_cartesian(xlim = c(0, 20))
-```
+We will cover less-common but useful families later
 
 ---
 
@@ -605,7 +587,7 @@ ggplot(sim_dat, aes(x, y, fill = mu)) +
   * If the data are collected in both space and time *and* 
     there are 'latent' spatial processes that vary through time
   * E.g., effect of water temperature on abundance if temperature wasn't in the model
-  * Represents all the missing variables that vary through time
+  * Represents all the missing spatial variables that vary through time
 
 --
 
@@ -626,6 +608,6 @@ Covered in examples in next slides.
 * `tidy()`: `?tidy.sdmTMB`
 * `print()`
 * `sanity()`
-* `get_index()`
+* `get_index()`, `get_cog()`, `get_eao()`, etc.
 *  `...`
 
