@@ -1,9 +1,9 @@
 future::plan(future::multisession, workers = 6L)
 options(future.rng.onMisuse = "ignore")
 
-PARALLEL <- T
+PARALLEL <- F
 BUILD_RMD <- T
-BUILD_QMD <- F
+BUILD_QMD <- T
 
 folder <- "."
 slides_folder <- "slides"
@@ -16,11 +16,23 @@ pwd <- getwd()
 files
 
 # Add .qmd files from exercises/ folder that start with "0"
-qmd_files <- list.files(file.path(folder, "exercises"), pattern = "^0.*\\.qmd$")
+all_qmd_files <- list.files(file.path(folder, "exercises"), pattern = "^0.*\\.qmd$")
+
+# Filter: keep -answers.qmd files and exclude non-answer files that have an -answers version
+qmd_files <- all_qmd_files[sapply(all_qmd_files, function(f) {
+  if (grepl("-answers\\.qmd$", f)) {
+    # Keep all -answers files
+    return(TRUE)
+  } else {
+    # For non-answer files, only keep if there's no corresponding -answers version
+    base_name <- sub("\\.qmd$", "", f)
+    answers_file <- paste0(base_name, "-answers.qmd")
+    return(!answers_file %in% all_qmd_files)
+  }
+})]
+
 qmd_files <- gsub("\\.qmd$", "", qmd_files)
 qmd_files <- file.path("exercises", qmd_files)
-qmd_files <- qmd_files[!grepl("05-exercise", qmd_files)]
-qmd_files <- qmd_files[!grepl("05b-exercise", qmd_files)]
 qmd_files
 
 rm <- function(x) if (file.exists(x)) file.remove(x)
