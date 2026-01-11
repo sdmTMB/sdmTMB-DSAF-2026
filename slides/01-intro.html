@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Introduction to the workshop, random fields, and the SPDE</title>
+    <title>Introduction to model-based distribution estimation, random fields, and the SPDE</title>
     <meta charset="utf-8" />
     <meta name="author" content="" />
     <script src="libs/header-attrs-2.30/header-attrs.js"></script>
@@ -13,7 +13,7 @@
 class: center, middle, inverse, title-slide
 
 .title[
-# Introduction to the workshop, random fields, and the SPDE
+# Introduction to model-based distribution estimation, random fields, and the SPDE
 ]
 .subtitle[
 ## DFO DSAF workshop
@@ -81,11 +81,26 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 ### Species ranges often cover multiple surveys
 
 .pull-left[
-&lt;img src="images/survey-join-map.png" width="60%" /&gt;
+&lt;img src="images/survey-join-map.png" width="55%" /&gt;
 ]
 
 .pull-right[
-&lt;img src="images/dogfish-svc-simple.png" width="60%" /&gt;
+&lt;img src="images/dogfish-svc-simple.png" width="55%" /&gt;
+]
+
+.xtiny[
+Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. doi:10.1111/faf.70028.
+]
+
+
+---
+
+### Raw sampling data can confuse sampling changes with distribution changes
+
+&lt;img src="images/velocity-fig.png" width="75%" /&gt;
+
+.xtiny[
+Pinsky, M.L., Worm, B., Fogarty, M.J., Sarmiento, J.L., and Levin, S.A. 2013. Marine taxa track local climate velocities. Science 341(6151): 1239–1242. doi:10.1126/science.1239352.
 ]
 
 ---
@@ -99,6 +114,10 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 (standardizes for spatial, gear, and effort variation in sampling)
 
 3. Calculate distribution metrics from those predictions with uncertainty
+]
+
+.tiny[
+Thorson, J.T., Pinsky, M.L., and Ward, E.J. 2016. Model-based inference for estimating shifts in species distribution, area occupied and centre of gravity. Methods Ecol Evol 7(8): 990–1002. doi:10.1111/2041-210X.12567.
 ]
 
 ---
@@ -149,9 +168,156 @@ That's going to be the focus of much of this workshop
 
 ---
 
-class: center, middle, inverse
+class: middle, inverse
 
 # To make reliable inference on species distribution changes, we first need a good model-based representation of species distribution
+
+---
+
+class: middle
+
+# sdmTMB is an R package that (hopefully) helps you fit a reasonable spatiotemporal model to species distribution data.
+
+# Among many uses, it also helps you summarize distribution metrics from the model output.
+
+---
+
+class: center, middle, inverse
+
+# A few example uses related to distribution or distribution change
+
+---
+
+# Groundfish climate velocities
+
+.center[
+&lt;img src="images/english-velocity.png" width="90%" /&gt;
+]
+
+.tiny[
+English, P.A., Ward, E.J., Rooper, C.N., Forrest, R.E., Rogers, L.A., Hunter, K.L., Edwards, A.M., Connors, B.M., and Anderson, S.C. 2021. Contrasting climate velocity impacts in warm and cool locations show that effects of marine warming are worse in already warmer temperate waters. Fish and Fisheries 23(1): 239–255. doi:10.1111/faf.12613.
+]
+
+&lt;!-- --- --&gt;
+
+&lt;!-- #### Integrating trawl and longline surveys for BC groundfish --&gt;
+
+&lt;!-- .center[ --&gt;
+&lt;!-- &lt;img src="images/thompson-integrating-maps.png" width="58%" /&gt; --&gt;
+&lt;!-- ] --&gt;
+
+&lt;!-- .xtiny[ --&gt;
+&lt;!-- Thompson, P.L., Anderson, S.C., Nephin, J., Robb, C.K., Proudfoot, B., Park, A.E., Haggarty, D.R., and Rubidge, E.M. 2023. Integrating trawl and longline surveys across British Columbia improves groundfish distribution predictions. Can. J. Fish. Aquat. Sci. 80(1): 195–210. doi:10.1139/cjfas-2022-0108. --&gt;
+&lt;!-- ] --&gt;
+
+---
+
+##### Integrating dive, trawl, and trap surveys for Dungeness crab
+
+.center[
+&lt;img src="images/nephin.png" width="50%" /&gt;
+]
+
+.xtiny[
+Thompson, P.L., Anderson, S.C., Nephin, J., Robb, C.K., Proudfoot, B., Park, A.E., Haggarty, D.R., and Rubidge, E.M. 2023. Integrating trawl and longline surveys across British Columbia improves groundfish distribution predictions. Can. J. Fish. Aquat. Sci. 80(1): 195–210. doi:10.1139/cjfas-2022-0108.
+]
+
+---
+
+##### Quantifying expected bycatch ratios based from spatiotemporal distribution to inform legal expansion of Indigenous fishing rights
+
+.pull-left[
+&lt;img src="images/halibut-ye.jpg" width="100%" /&gt;
+]
+
+.pull-right[
+&lt;br&gt;
+&lt;br&gt;
+.tiny[
+English, P.A., Picco, C.M., Edwards, J.C., Haggarty, D.R., Forrest, R.E., and Anderson, S.C. 2023. Spatial restrictions hinder avoidance of choke species in an Indigenous rights-based fishery. People and Nature 6: 75–90. &lt;https://doi.org/10.1002/pan3.10554&gt;
+]
+]
+
+---
+
+#### Thermal niche changes for Pacific groundfish
+
+.center[
+&lt;img src="images/thermal-niche.png" width="58%" /&gt;
+]
+
+.xtiny[
+Ward, E.J., et al. 2024. Win, lose, or draw: Evaluating dynamic thermal niches of northeast Pacific groundfish. PLOS Climate 3(11): e0000454. Public Library of Science. doi:10.1371/journal.pclm.0000454.
+]
+
+---
+
+##### Biomass and condition distribution changes for Baltic Sea cod
+
+.center[
+&lt;img src="images/condition-sweden.png" width="65%" /&gt;
+]
+
+.xtiny[
+Lindmark, M., Anderson, S.C., Gogina, M., and Casini, M. 2023. Evaluating drivers of spatiotemporal variability in individual condition of a bottom-associated marine fish, Atlantic cod (*Gadus morhua*). ICES Journal of Marine Science 80(5): 1539–1550. &lt;https://doi.org/10.1093/icesjms/fsad084&gt;.
+]
+
+---
+
+#### Oxygen limitation effects on fish distribution
+
+.center[
+&lt;img src="images/indivero3.png" width="50%" /&gt;
+]
+
+.xtiny[
+Indivero, J., Anderson, S.C., Barnett, L.A.K., Thorson, J.T., Siedlecki, S., Ward, E.J., Essington, T.E. Oxygen constrains local densities across diverse marine bottom-associated marine fishes. Preprint posted soon.
+
+Indivero, J., Anderson, S.C., Barnett, L.A.K., Essington, T.E., and Ward, E.J. 2025. Estimating a physiological threshold to oxygen and temperature from marine monitoring data reveals challenges and opportunities for forecasting distribution shifts. Ecography 2025(e07413). doi:10.1111/ecog.07413.
+]
+
+---
+
+#### More than just fish!&lt;br&gt;52,000 years of woolly rhinoceros population dynamics
+
+.center[
+&lt;img src="images/woolly.png" width="52%" /&gt;
+]
+
+.xtiny[
+Fordham, D.A., Brown, S.C., Canteri, E., Austin, J.J., Lomolino, M.V., Haythorne, S., Armstrong, E., Bocherens, H., Manica, A., Rey-Iglesia, A., Rahbek, C., Nogués-Bravo, D., and Lorenzen, E.D. 2024. 52,000 years of woolly rhinoceros population dynamics reveal extinction mechanisms. Proc. Natl. Acad. Sci. U.S.A. 121(24): e2316419121. doi:10.1073/pnas.2316419121.
+]
+
+---
+
+#### Spatiotemporal dynamics of Swedish marine litter
+
+.center[
+&lt;img src="images/garbage2.jpg" width="100%" /&gt;
+]
+
+.xtiny[
+Norén, K., Svensson, F., and Lindmark, M. 2025. Evaluating the potential of underwater television to contribute to marine litter assessments alongside bottom trawling. PLoS One 20(6): e0324900. &lt;https://10.1371/journal.pone.0324900&gt;.
+]
+
+---
+
+### Increasingly used by agencies for distribution modelling and index standardization
+
+* DFO
+* NOAA: NWFSC, AFSC, ...
+* Pacific Hake U.S.-Canada assessment
+* Norwegian and Swedish governments
+* NAFO; STACREC .tiny[Standing Committee on Research Coordination]
+* ICES
+* Inter-American Tropical Tuna Commission
+* International Scientific Committee (ISC) for tuna and billfish assessments
+
+---
+
+class: center, middle, inverse
+
+# Workshop plan
 
 ---
 
@@ -165,7 +331,7 @@ Day 2: Families, delta models, time-varying effects, spatially varying effects, 
 
 --
 
-Day 3: Integrated models, forecasting, simulating, **metrics of distribution change**
+Day 3: Integrated models, forecasting, simulating, **metrics of distribution change**, future directions, closing thoughts
 
 ---
 
@@ -173,7 +339,7 @@ Day 3: Integrated models, forecasting, simulating, **metrics of distribution cha
 
 Each day: a mix of lectures and exercises, breaks as needed, talks on applied sdmTMB uses
 
-Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/19zveT73HVWa73UhxsAcDntAhrBDX_F327otqve7RQ4Y/edit?usp=sharing). Thanks!
+Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/19GWbmK43xR-6rEOzGmMM6BJXo6inB69KByXIslHtgt0/edit?tab=t.0). Thanks!
 
 ---
 
@@ -301,7 +467,7 @@ background-image: url("images/elmo.png")
 background-position: bottom right
 background-size: 30%
 
-# Random field
+# Random fields
 
 A way of estimating a wiggly surface to account for spatial and/or spatiotemporal correlation in data.
 
@@ -311,7 +477,7 @@ Alternatively, a way of estimating a wiggly surface to account for unobserved sp
 
 --
 
-As a bonus, it provides useful parameter estimates: spatial variance (magnitude of wiggles) and the rate at which data become uncorrelated with distance (how smooth are the wiggles).
+As a bonus, they provide useful parameter estimates: spatial variance (magnitude of wiggles) and the rate at which data become uncorrelated with distance (how smooth are the wiggles).
 
 ---
 
@@ -489,7 +655,7 @@ Miller, D.L., Glennie, R., and Seaton, A.E. 2019. Understanding the Stochastic P
 
 # Introducing meshes
 
-The SPDE approach involves a triangulation over the area of interest; we call this a "mesh" or more accurately a "finite element mesh".
+The SPDE approach involves a triangulation over the area of interest; we call this a "mesh" or more accurately a "finite element mesh"
 
 &lt;img src="01-intro_files/figure-html/mesh-example-1.png" width="700px" style="display: block; margin: auto;" /&gt;
 

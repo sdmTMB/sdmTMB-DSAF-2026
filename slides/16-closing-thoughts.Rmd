@@ -27,16 +27,16 @@ library(sdmTMB)
 # Getting help
 
 * sdmTMB GitHub repository:  
-  <https://github.com/pbs-assess/sdmTMB>
+  <https://github.com/sdmTMB/sdmTMB>
   
 * sdmTMB documentation:  
-  <https://pbs-assess.github.io/sdmTMB/index.html>
+  <https://sdmTMB.github.io/sdmTMB/index.html>
 
 *  New features to suggest? Bugs?  
-  <https://github.com/pbs-assess/sdmTMB/issues>
+  <https://github.com/sdmTMB/sdmTMB/issues>
   
 *  Resources and reference material: 
-  <https://github.com/pbs-assess/sdmTMB/wiki/resources>
+  <https://github.com/sdmTMB/sdmTMB/wiki/resources>
 
 ---
 
