@@ -6,8 +6,7 @@ title: sdmTMB setup on DFO computers
    'Software Centre'):
 
 - R 4.5.2 (or 4.4 or higher)
-- RStudio latest version (for DFO computers you need to search
-  "R Studio" with a space)
+- RStudio latest version (for DFO computers search for "studio"; they keep changing the way they list it in software center "R Studio" or "R-Studio", "RStudio")
 
 2. In R, install sdmTMB from CRAN
 
