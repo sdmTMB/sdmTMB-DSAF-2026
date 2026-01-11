@@ -2,7 +2,7 @@
 title: "Fitting a spatiotemporal model"
 format: html
 editor: visual
-execute: 
+execute:
   echo: true
   eval: true
 ---
@@ -109,7 +109,7 @@ Using `silent = FALSE` lets us see what is happening, but it's awkward when runn
 ```{r, results='hide'}
 fit_spatial <- sdmTMB(
   density ~ poly(log_depth, 2), # quadratic depth effect
-  data = dat,  
+  data = dat,
   family = tweedie(link = "log"),
   mesh = mesh,
   spatial = "on",
@@ -142,7 +142,7 @@ First, let's fit out possible anisotropic model to make sure it can be estimated
 ```{r}
 fit_aniso <- sdmTMB(
   density ~ poly(log_depth, 2), # quadratic depth effect
-  data = dat,  
+  data = dat,
   family = tweedie(link = "log"),
   mesh = mesh,
   spatial = "on",
@@ -174,8 +174,8 @@ We will demonstrate cross validation using the built-in `sdmTMB_cv()` function. 
 1.  The data are divided into `k` folds
 2.  In turn, each fold is used as the test or validation dataset, with the remaining data used to fit the model
 3.  Measures of predictive accuracy are calculated for each fold, and finally across the full dataset
-4.  The number of folds, and how folds are selected can affect results
-5.  We can manually set the folds if we'd like. Here will divide the data by year.
+4.  The number of folds, and how folds are selected can affect results (default is random selection)
+5.  We can manually set the folds if we'd like. Here we will divide the data by year (i.e., folds contain only data from a single year).
 
 ```{r}
 # optional for parallel processing
@@ -187,7 +187,7 @@ unique(dat$folds)
 
 cv_anisotropic <- sdmTMB_cv(
   density ~ poly(log_depth, 2),
-  data = dat,  
+  data = dat,
   spatial = "on",
   anisotropy = TRUE, #<
   family = tweedie(),
@@ -197,7 +197,7 @@ cv_anisotropic <- sdmTMB_cv(
 
 cv_isotropic <- sdmTMB_cv(
   density ~ poly(log_depth, 2),
-  data = dat,  
+  data = dat,
   spatial = "on",
   family = tweedie(),
   fold_ids = dat$folds,
@@ -246,9 +246,9 @@ cat("LPD difference (anisotropic - isotropic):", round(lpd_diff, 2), "±", round
 ### Exercise:
 
 1.  Which model does LPD suggest has better out-of-sample predictive performance?
-2.  How consistent is that result across folds?
-3.  We assigned folds. What happens if you don't do this? Why might you want to set the random seed first?
-4.  How else could you use the folds?
+2.  How consistent is that result across folds? Does one model perform better in every fold, or are results mixed?
+3.  We assigned folds based on year. What happens if you don't do this (i.e., `fold_ids = NULL`)? Why might you want to set the random seed before each cross-validation run when comparing multiple models with random fold assignment?
+4.  How else could you use the folds? (Think about spatial structure or forecasting applications)
 
 We won't dwell on this model here for the sake of time, but in practice we would stop, inspect, and understand this model before progressing to a spatiotemporal model.
 
@@ -476,7 +476,7 @@ An alternative model would use AR(1) (first order autoregressive) correlated fie
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
 fit_ar1 <- update(
-  fit, 
+  fit,
   spatial = "off", #< left of on purpose to illustrate something below; normally leave on
   spatiotemporal = "ar1"
 )
@@ -527,11 +527,11 @@ And plot the spatiotemporal field estimates (`epsilon_st`) for 3 example years:
 yrs <- c(2012, 2014, 2016)
 scale_limits <- range(c(p_iid$epsilon_st, p_ar1$epsilon_st))
 
-g1 <- filter(p_iid, year %in% yrs) |> 
-  plot_field(epsilon_st, lims = scale_limits) + 
+g1 <- filter(p_iid, year %in% yrs) |>
+  plot_field(epsilon_st, lims = scale_limits) +
   ggtitle("IID spatiotemporal fields")
-g2 <- filter(p_ar1, year %in% yrs) |> 
-  plot_field(epsilon_st, lims = scale_limits) + 
+g2 <- filter(p_ar1, year %in% yrs) |>
+  plot_field(epsilon_st, lims = scale_limits) +
   ggtitle("AR1 spatiotemporal fields")
 
 cowplot::plot_grid(g1, g2, nrow = 2, align = "v")
@@ -546,11 +546,11 @@ What if we combine the spatial and spatiotemporal fields from the IID model?
 ```{r}
 scale_limits <- range(c(p_iid$omega_s + p_iid$epsilon_st, p_ar1$epsilon_st))
 
-g1 <- filter(p_iid, year %in% yrs) |> 
-  plot_field(epsilon_st + omega_s, lims = scale_limits) + 
+g1 <- filter(p_iid, year %in% yrs) |>
+  plot_field(epsilon_st + omega_s, lims = scale_limits) +
   ggtitle("Spatial + IID spatiotemporal fields")
-g2 <- filter(p_ar1, year %in% yrs) |> 
-  plot_field(epsilon_st, lims = scale_limits) + 
+g2 <- filter(p_ar1, year %in% yrs) |>
+  plot_field(epsilon_st, lims = scale_limits) +
   ggtitle("AR1 spatiotemporal fields")
 
 cowplot::plot_grid(g1, g2, nrow = 2, align = "v")
@@ -578,10 +578,10 @@ And plot predictions from our 2 models:
 scale_limits <- range(c(p_iid$est, p_ar1$est))
 
 g1 <- filter(p_iid, year %in% yrs) |>
-  plot_map(est, lims = scale_limits) + 
+  plot_map(est, lims = scale_limits) +
   ggtitle("IID predictions")
-g2 <- filter(p_ar1, year %in% yrs) |> 
-  plot_map(est, lims = scale_limits) + 
+g2 <- filter(p_ar1, year %in% yrs) |>
+  plot_map(est, lims = scale_limits) +
   ggtitle("AR1 predictions")
 
 cowplot::plot_grid(g1, g2, nrow = 2, align = "v")
@@ -603,7 +603,7 @@ We'll start by (roughly) centering our year predictor to make it more computatio
 dat$year_centered <- dat$year - 2012
 fit_svc <- sdmTMB(
   density ~ year_centered,
-  data = dat,  
+  data = dat,
   family = tweedie(link = "log"),
   mesh = mesh,
   spatial = "on",
