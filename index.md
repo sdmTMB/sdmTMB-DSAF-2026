@@ -54,6 +54,14 @@ January 12-14 2026
 
 13. [Simulation](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/13-simulation.html)
 
+14. [Distribution shifts](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/14-distribution-shifts.html)
+
+15. [Future directions](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/15-future-directions.html)
+
+15. [Future directions](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/15-future-directions.html)
+
+16. [Related packages, troubleshooting, Q+A, tips](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/16-closing-thoughts.html)
+
 Additional topics:
 
 - [Random fields with physical barriers](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/99-barrier-models.html)
@@ -62,7 +70,6 @@ Additional topics:
 
 - [Spatial modeling of presence-only data](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/99-presence-only.html)
 
-- [Related packages, troubleshooting, Q+A, tips](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/99-extra.html)
 
 ### GitHub folder for these slides:
 
