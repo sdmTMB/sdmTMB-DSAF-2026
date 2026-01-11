@@ -16,7 +16,7 @@ January 12-14 2026
 
 ### Shared Google Docs notes and questions
 
-<https://docs.google.com/document/d/19zveT73HVWa73UhxsAcDntAhrBDX_F327otqve7RQ4Y/edit?tab=t.0>
+<https://docs.google.com/document/d/19GWbmK43xR-6rEOzGmMM6BJXo6inB69KByXIslHtgt0/edit?tab=t.0>
 
 ### Draft manuscript:
 
