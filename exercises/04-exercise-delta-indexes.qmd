@@ -367,9 +367,6 @@ ggplot(index_dg, aes(year, est)) +
 Let's see if this index differs from what it would look like using the Tweedie model.
 
 ```{r}
-p_tw <- predict(fit_tweedie, newdata = new_grid, return_tmb_object = TRUE)
-index_tw <- get_index(p_tw, area = new_grid$cell_area, bias_correct = TRUE)
-
 p_tw <- predict(fit_tweedie, newdata = grid, return_tmb_object = TRUE)
 index_tw <- get_index(p_tw, area = grid$cell_area, bias_correct = TRUE)
 
