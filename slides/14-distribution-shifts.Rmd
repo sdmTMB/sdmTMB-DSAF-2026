@@ -45,7 +45,7 @@ Spatially varying trends
 # General idea throughout
 
 .large[
-1. Fit a reasonable spatially explicit model
+1. Fit a reasonable spatiotemporal model
 
 2. Predict to a constant grid over the spatial domain
 (standardizes for spatial variation in sampling, combining data sources, etc.)
@@ -166,7 +166,7 @@ See `exercises/understanding-eao.R`
 Area occupied if density is uniformly distributed at the mean density that a randomly chosen individual experiences
 ]
 
-```{r}
+```{r eao-concentrated}
 D <- c(10, 2, 0) # densities in 3 grid cells
 a <- 1  # area of each cell
 b <- sum(D * a)
@@ -222,7 +222,7 @@ sum(D * a)^2 / sum(D^2 * a)
 If distribution is uniform, EAO maximized (total survey area)
 ]
 
-```{r}
+```{r eao-uniform}
 g2 <- ggplot(data.frame(xmin = 0:2, xmax = 1:3, ymin = 0, ymax = 1, Density = c(3, 3, 3))) + 
   geom_rect(colour = "black", mapping = aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = Density)) +
   coord_equal() + theme_void() +
