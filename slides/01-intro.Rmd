@@ -1,5 +1,5 @@
 ---
-title: "Introduction to model-based distribution estimation, random fields, and the SPDE"
+title: "Introduction to model-based distribution estimation & random fields"
 subtitle: "DFO DSAF workshop"
 author: ""
 institute: ""
