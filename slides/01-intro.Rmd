@@ -191,18 +191,6 @@ class: center, middle, inverse
 English, P.A., Ward, E.J., Rooper, C.N., Forrest, R.E., Rogers, L.A., Hunter, K.L., Edwards, A.M., Connors, B.M., and Anderson, S.C. 2021. Contrasting climate velocity impacts in warm and cool locations show that effects of marine warming are worse in already warmer temperate waters. Fish and Fisheries 23(1): 239–255. doi:10.1111/faf.12613.
 ]
 
-<!-- --- -->
-
-<!-- #### Integrating trawl and longline surveys for BC groundfish -->
-
-<!-- .center[ -->
-<!-- <img src="images/thompson-integrating-maps.png" width="58%" /> -->
-<!-- ] -->
-
-<!-- .xtiny[ -->
-<!-- Thompson, P.L., Anderson, S.C., Nephin, J., Robb, C.K., Proudfoot, B., Park, A.E., Haggarty, D.R., and Rubidge, E.M. 2023. Integrating trawl and longline surveys across British Columbia improves groundfish distribution predictions. Can. J. Fish. Aquat. Sci. 80(1): 195–210. doi:10.1139/cjfas-2022-0108. -->
-<!-- ] -->
-
 ---
 
 ##### Integrating dive, trawl, and trap surveys for Dungeness crab
