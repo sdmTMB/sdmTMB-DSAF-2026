@@ -58,8 +58,6 @@ January 12-14 2026
 
 15. [Future directions](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/15-future-directions.html)
 
-15. [Future directions](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/15-future-directions.html)
-
 16. [Related packages, troubleshooting, Q+A, tips](https://sdmTMB.github.io/sdmTMB-DSAF-2026/slides/16-closing-thoughts.html)
 
 Additional topics:
