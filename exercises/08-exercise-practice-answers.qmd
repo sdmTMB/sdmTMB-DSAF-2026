@@ -1,5 +1,5 @@
 ---
-title: "Fitting spatial/spatiotemporal models"
+title: "Fitting spatiotemporal models + distribution metrics practice"
 format: html
 editor: visual
 execute:

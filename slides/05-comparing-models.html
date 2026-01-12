@@ -131,7 +131,7 @@ Random effects include
 
 * Conditional AIC: less widely used, computationally harder
   * Thorson 2024: &lt;https://doi.org/10.1002/ecy.4327&gt; for GMRF models
-  * Also built into sdmTMB
+  * Also built into sdmTMB `?cAIC`
 ]
 
 ---
@@ -241,7 +241,7 @@ mesh &lt;- make_mesh(pcod, c("X", "Y"), cutoff = 10)
 )
 # Sum of log likelihoods of left-out data:
 m_cv$sum_loglik # higher is better
-#&gt; [1] -6833.435
+#&gt; [1] -6780.385
 ```
 
 ---
