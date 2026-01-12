@@ -225,7 +225,7 @@ head(sim_dat4)
 ::: {.callout-note appearance="simple"}
 **How are observed values generated?**
 
-```
+```         
 Linear predictor  →  Link function  →  Expected value  →  Add obs. error  →  Observed
       eta                 g()                mu              +ε                 y
 ```
