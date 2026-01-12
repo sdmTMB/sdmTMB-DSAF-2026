@@ -11,6 +11,7 @@ execute:
 
 -   Gain exposure to calculating a variety of distribution shift metrics with sdmTMB (center of gravity, effective area occupied, range edges, covariate weighted averages)
 -   Explore how spatially varying coefficients can reveal spatially structured trends
+-   Calculate subregional population indices
 
 # Setup
 
@@ -98,6 +99,8 @@ predictions <- predict(fit, newdata = nd, return_tmb_object = TRUE)
 
 The center of gravity (COG) gives the density-weighted mean location of the distribution. We can summarize it as a single point per year, with uncertainty intervals for both the x and y coordinates. `format = "wide"` makes it easier to plot here with ggplot.
 
+Although this idea has been around since at least the 1980s, applying it to predictions from a GMRF model was first described in Thorson et al. (2016). See Woillez et al. (2007) to start diving into older references.
+
 ```{r}
 cog <- get_cog(predictions, format = "wide")
 cog
@@ -118,6 +121,23 @@ ggplot(cog, aes(year, est_y)) +
   geom_linerange(aes(ymin = lwr_y, ymax = upr_y))
 ```
 
+# Density-weighted habitat covariate
+
+This metric summarizes how the distribution shifts with respect to a habitat covariate. The concept si the same as the center of gravity but applied to variables other than latitude and longitude. 
+
+Here, we'll use depth. We flip the sign in the plot so deeper values appear lower on the y-axis.
+
+```{r}
+wa <- get_weighted_average(predictions, vector = nd$depth)
+wa
+ggplot(wa, aes(year, -est)) + geom_line() +
+  geom_ribbon(aes(ymin = -lwr, ymax = -upr), alpha = 0.4)
+```
+
+We could also do this with temperature and potentially compare to the density-weighted mean temperature with an average spatial distribution.
+
+See Davidson et al. (2025) for an expanded version of this example and Ward et al. (2024) for a related example with niche width.
+
 # Effective area occupied
 
 The effective area occupied (EAO) is a distributional metric related to concentration. It can decrease when a population becomes more spatially clustered, and increase when the population spreads out. See Thorson et al. (2016) for an explanation of the metric as calculated here. See `exercises/understanding-eao.R` for a walk through.
@@ -133,24 +153,9 @@ ggplot(eao, aes(year, est)) + geom_line() +
   ylab("Effective area occupied (km^2)")
 ```
 
-# Density-weighted habitat covariate
-
-This metric summarizes how the distribution shifts with respect to a habitat covariate. Here, we'll use depth. We flip the sign in the plot so deeper values appear lower on the y-axis.
-
-```{r}
-wa <- get_weighted_average(predictions, vector = nd$depth)
-wa
-ggplot(wa, aes(year, -est)) + geom_line() +
-  geom_ribbon(aes(ymin = -lwr, ymax = -upr), alpha = 0.4)
-```
-
-We could also do this with temperature and potentially compare to the density-weighted mean temperature with an average spatial distribution.
-
-See Davidson et al. (2025) for an expanded version of this example and Ward et al. (2024) for a related example with niche width.
-
 # Range edges
 
-The `get_range_edge()` function calculates range edges as density-weighted quantiles along a spatial axis (e.g., latitude, longitude, or depth). This approach follows methods used in Fredston et al. 2021 from VAST.
+The `get_range_edge()` function calculates range edges as density-weighted quantiles along a spatial axis (e.g., latitude, longitude, or depth). This approach follows methods used in Fredston et al. (2021) from VAST.
 
 Range edges are calculated by:
 
@@ -186,21 +191,18 @@ The output includes:
 We can plot how the range edges change over time:
 
 ```{r plot-custom-edges, fig.width=7, fig.asp=0.5}
-ggplot(edges, aes(year, est, colour = factor(quantile))) +
-  geom_line() +
+ggplot(edges, aes(year, est)) +
+  geom_line(aes(colour = factor(quantile))) +
   geom_ribbon(
     aes(ymin = lwr, ymax = upr, fill = factor(quantile)),
-    alpha = 0.2,
-    colour = NA
+    alpha = 0.2
   ) +
   labs(
     x = "Year",
     y = "Latitude (UTM km)",
     colour = "Quantile",
     fill = "Quantile"
-  ) +
-  scale_colour_discrete(labels = c("5%", "50%", "95%")) +
-  scale_fill_discrete(labels = c("5%", "50%", "95%"))
+  )
 ```
 
 This plot shows how the northern and southern range edges of dogfish have shifted over time, with uncertainty bands reflecting sampling and estimation uncertainty. The median line represents the center of the distribution.
@@ -225,10 +227,10 @@ For example, we could calculate the probability that the upper range edge (north
 ```{r prob-shift}
 # Extract simulations for upper edge in first and last year
 upper_first <- edges_sims |>
-  filter(quantile == 0.95, year == min(year))
+  filter(year == min(year))
 
 upper_last <- edges_sims |>
-  filter(quantile == 0.95, year == max(year))
+  filter(year == max(year))
 
 # Calculate shift for each simulation
 shifts <- upper_last$.value - upper_first$.value[match(upper_last$.iteration, upper_first$.iteration)]
@@ -314,16 +316,25 @@ fit_svc
 ```
 
 ```{r}
+# we only need one year for visualization here
 nd_one_year <- filter(nd, year == max(nd$year))
+
+# make sure to center year by the same mean as in fitting!
 nd_one_year$decade <- (nd_one_year$year - mean(dog$year)) / 10
+
 pred_svc <- predict(fit_svc, newdata = nd_one_year)
 ```
 
-To get the overall spatial trends, we need to combine the fixed and random effects from both linear predictors of the delta model. Because we used the Poisson-link, both are in log space and we can simply add them. We *could not* do this with a standard delta model that has a logit and log link. We need to use the Poisson-link delta *or* a model with one linear predictor (e.g., Tweedie, NB2).
+To get the overall spatial trends, we need to combine the fixed and random effects from both linear predictors of the delta model. Because we used the Poisson-link, both are in log space and we can simply add them. 
+
+We **could not** do this with a standard delta model that has a logit and log link. We need to use the Poisson-link delta *or* a model with one linear predictor (e.g., Tweedie, NB2).
 
 ```{r}
-fe1 <- coef(fit_svc, model = 1)[["decade"]]
-fe2 <- coef(fit_svc, model = 2)[["decade"]]
+fe1 <- coef(fit_svc, model = 1)[["decade"]] # fixed effect from 1st linear predictor
+fe2 <- coef(fit_svc, model = 2)[["decade"]] # fixed effect from 2nd linear predictor
+# we could have also used tidy() ?tidy.sdmTMB
+
+# the overall SVC is the fixed effects plus the random effects
 pred_svc <- mutate(pred_svc, svc = fe1 + fe2 + zeta_s_decade1 + zeta_s_decade2)
 ```
 
@@ -331,6 +342,40 @@ pred_svc <- mutate(pred_svc, svc = fe1 + fe2 + zeta_s_decade1 + zeta_s_decade2)
 ggplot(pred_svc, aes(X, Y, fill = exp(svc))) + geom_tile() +
   scale_fill_gradient2(trans = "log10") +
   labs(fill = "Multiplicative\nchange\nper decade")
+```
+
+# Subregional population indices
+
+We can calculate population indices for portions of a survey grid by filtering our survey grey, predicting on it, and then integrating the biomass (or abundance) over that filtered grid. This lets us ask questions about how biomass or abundance has been changing over smaller spatial regions.
+
+We could also do this for center of gravity as in Barnett et al. (2021).
+
+```{r}
+# visualize our grid
+mutate(nd, north_half = Y > 5450) |> 
+  ggplot(aes(X, Y, fill = north_half)) + geom_tile()
+
+# split our grid
+grid_north <- filter(nd, Y > 5450)
+grid_south <- filter(nd, Y <= 5450)
+
+# predict on each half
+pred_north <- predict(fit, newdata = grid_north, return_tmb_object = TRUE)
+pred_south <- predict(fit, newdata = grid_south, return_tmb_object = TRUE)
+
+# integrate density over the grid
+index_north <- get_index(pred_north, area = 4, bias_correct = TRUE)
+index_south <- get_index(pred_south, area = 4, bias_correct = TRUE)
+
+# visualize the index
+bind_rows(
+  mutate(index_north, subregion = "North WCVI"),
+  mutate(index_south, subregion = "South WCVI")
+) |> 
+  ggplot(aes(year, y = est, ymin = lwr, ymax = upr)) + 
+  geom_ribbon(aes(fill = subregion), alpha = 0.2) +
+  geom_line(aes(colour = subregion))
+  # scale_y_log10()
 ```
 
 # References
@@ -345,4 +390,8 @@ Fredston, A. L., Pinsky, M., Selden, R. L., Szuwalski, C., Thorson, J. T., Gaine
 
 Thorson, J.T., Rindorf, A., Gao, J., Hanselman, D.H., and Winker, H. 2016. Density-dependent changes in effective area occupied for sea-bottom-associated marine fishes. Proceedings of the Royal Society B: Biological Sciences 283(1840): 20161853. Royal Society. <https://doi.org/10.1098/rspb.2016.1853>.
 
+Thorson, J.T., Pinsky, M.L., and Ward, E.J. 2016. Model-based inference for estimating shifts in species distribution, area occupied and centre of gravity. Methods Ecol Evol 7(8): 990–1002. <https://doi.org/10.1111/2041-210X.12567>.
+
 Ward, E.J., Anderson, S.C., Barnett, L.A.K., English, P.A., Berger, H.M., Commander, C.J.C., Essington, T.E., Harvey, C.J., Hunsicker, M.E., Jacox, M.G., Johnson, K.F., Large, S., Liu, O.R., Richerson, K.E., Samhouri, J.F., Siedlecki, S.A., Shelton, A.O., Somers, K.A., and Watson, J.T. 2024. Win, lose, or draw: Evaluating dynamic thermal niches of northeast Pacific groundfish. PLOS Climate 3(11): e0000454. Public Library of Science. <https://doi.org/10.1371/journal.pclm.0000454>
+
+Woillez, M., Poulard, J.-C., Rivoirard, J., Petitgas, P., and Bez, N. 2007. Indices for capturing spatial patterns and their evolution in time, with application to European hake (*Merluccius merluccius*) in the Bay of Biscay. ICES J Mar Sci 64(3): 537–550. <https://doi.org/10.1093/icesjms/fsm025>.

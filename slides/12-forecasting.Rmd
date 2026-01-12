@@ -244,4 +244,4 @@ ggplot(grid, aes(X, Y, fill = se)) +
 * AR(1) field processes revert towards mean
 * Random walk field processes do not revert towards mean
 * Smoothers should be used with caution when forecasting  
-  .xsmall[(they continue whatever the basis functions were doing)]
+  .xsmall[(they continue whatever the basis functions were doing, which can be silly)]

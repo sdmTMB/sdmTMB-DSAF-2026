@@ -36,7 +36,7 @@ ggplot(pcod, aes(X, Y, size = density)) +
 ```
 
 ```{r}
-mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 8)
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 40)
 plot(mesh)
 ```
 
@@ -66,8 +66,7 @@ fit_pcod
 2.  Try fixing it below:
 
 ```{r}
-mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10) # answer
-# mesh <- # exercise
+mesh <- # exercise
 plot(mesh)
 ```
 
@@ -115,7 +114,6 @@ fit_ye <- sdmTMB(
   # silent = FALSE,
   mesh = mesh_north,
   data = d_north
-  # control = sdmTMBcontrol(col())
 )
 ```
 
@@ -126,22 +124,26 @@ sanity(fit_ye)
 ### Exercise:
 
 1.  What is the problem with the above?
-2.  What are some ways you could attempt to fix this?
-3.  What is a simpler random field structure you could try? Try that below with `fit_ye1`.
-4.  What is a simpler family you could try? Try that below with `fit_ye2`.
+2.  What is a simpler random field structure you could try? Try that below with `fit_ye1`.
+2.  How could you fix this with the new `collapse_spatial_variance` in `sdmTMBcontrol()`?. Try that below with `fit_ye2`.
+4.  What is a simpler family you could try? Try that below with `fit_ye3`.
 
 ```{r}
-fit_ye1 <- update(fit_ye, spatiotemporal = "off") # answer
-# fit_ye1 <- update(fit_ye, spatiotemporal = ) # exercise
+fit_ye1 <- update(fit_ye, spatiotemporal = ) # exercise
 sanity(fit_ye1)
 fit_ye1
 ```
 
 ```{r}
-fit_ye2 <- update(fit_ye, family = poisson(link = "log")) # answer
-# fit_ye2 <- update(fit_ye, family = ) # exercise
+fit_ye2 <- update(fit_ye, control = ) # exercise
 sanity(fit_ye2)
 fit_ye2
+```
+
+```{r}
+fit_ye3 <- update(fit_ye, family = ) # exercise
+sanity(fit_ye3)
+fit_ye3
 ```
 
 ## Problem 3
@@ -178,8 +180,7 @@ fit_pcod <- sdmTMB(
 Hint: When was the mesh created relative to any filtering of the data? Why is this a problem?
 
 ```{r}
-mesh <- make_mesh(dat, xy_cols = c("X", "Y"), cutoff = 10) # answer
-# exercise
+mesh <- # exercise
 fit_pcod <- sdmTMB(
   present ~ poly(depth, 2),
   spatial = "on",
@@ -193,6 +194,5 @@ fit_pcod
 Bonus: try plotting the depth effect using the `ggeffect::ggeffect()` function.
 
 ```{r}
-ggeffects::ggeffect(fit_pcod, "depth [0:600 by=2]") |> plot() # answer
-## exercise
+  ggeffects::ggeffect(fit_pcod, terms = ) |> plot() # exercise
 ```

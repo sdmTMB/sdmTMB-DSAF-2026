@@ -121,7 +121,7 @@ Random effects include
 
 * Conditional AIC: less widely used, computationally harder
   * Thorson 2024: <https://doi.org/10.1002/ecy.4327> for GMRF models
-  * Also built into sdmTMB
+  * Also built into sdmTMB `?cAIC`
 ]
 
 ---

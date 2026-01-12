@@ -1,5 +1,5 @@
 ---
-title: "Fitting spatial/spatiotemporal models"
+title: "Fitting spatiotemporal models + distribution metrics practice"
 format: html
 editor: visual
 execute:
@@ -265,7 +265,7 @@ Try calculating effective area occupied with `get_eao()`. Don't forget to specif
 
 ```{r}
 eao <- get_eao(pred, area = 4) # answer
-# eao <-  exercise
+# eao <-  # exercise
 
 ggplot(eao, aes(year, y = est, ymin = lwr, ymax = upr)) +
   geom_pointrange()
@@ -280,9 +280,30 @@ pred_sim <- predict(fit, newdata = grid, nsim = 200)
 dim(pred_sim)
 
 edges <- get_range_edge(pred_sim, axis = grid$Y) # answer
-# edges <- get_range_edge(pred_sim, axis = <fill in here>) # exercise
+# edges <- get_range_edge(pred_sim, axis = ) # exercise
 
 ggplot(edges, aes(year, y = est, ymin = lwr, ymax = upr, group = quantile)) +
   geom_ribbon(fill = "grey90") +
   geom_line()
+```
+
+# Calculating a subregional index
+
+Try calculating an index for the northern half of Queen Charlotte Sound (\> 5725 UTMs) and the souther half (\<= 5725 UTMs).
+
+```{r}
+grid_north <- filter(grid, Y > 5725)
+grid_south <- filter(grid, Y <= 5725)
+
+pred_north <- predict(fit, newdata = grid_north, return_tmb_object = TRUE)
+pred_south <- predict(fit, newdata = grid_south, return_tmb_object = TRUE)
+
+# index_north <- # exercise
+# index_south <- # exercise
+
+index_north <- get_index(pred_north, area = 4, bias_correct = TRUE) # answer
+index_south <- get_index(pred_south, area = 4, bias_correct = TRUE) # answer
+
+ggplot(index_north, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
+ggplot(index_south, aes(year, y = est, ymin = lwr, ymax = upr)) + geom_pointrange()
 ```

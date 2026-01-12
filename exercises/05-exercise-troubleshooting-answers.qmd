@@ -1,0 +1,204 @@
+---
+title: "Troubleshooting sdmTMB"
+format: html
+editor: visual
+execute:
+  echo: true
+  eval: true
+---
+
+# Goals:
+
+-   Gain problem solving skills by fixing 3 models with estimation problems or other errors you may encounter.
+
+```{r, message=FALSE, warning=FALSE}
+library(sdmTMB)
+library(dplyr)
+library(ggplot2)
+options(ggplot2.continuous.colour = "viridis")
+options(ggplot2.continuous.fill = "viridis")
+theme_set(theme_light())
+```
+
+# Problem solving
+
+The following are 3 models where each has some estimation problem or creates an error. Try to fix the problems.
+
+## Problem 1:
+
+```{r}
+glimpse(pcod) # built in
+```
+
+```{r}
+ggplot(pcod, aes(X, Y, size = density)) +
+  geom_point(shape = 21)
+```
+
+```{r}
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 40)
+plot(mesh)
+```
+
+```{r}
+fit_pcod <- sdmTMB(
+  density ~ poly(depth, 2),
+  spatial = "on",
+  family = tweedie(link = "log"),
+  mesh = mesh,
+  data = pcod
+)
+```
+
+```{r}
+sanity(fit_pcod)
+fit_pcod
+```
+
+### Exercise:
+
+1.  What is the problem with the above?
+
+-   Hint: look at `sanity(fit_pcod)`
+-   Hint: look at the range estimate with `print(fit_pcod)`
+-   Hint: look at the mesh `cutoff` value
+
+2.  Try fixing it below:
+
+```{r}
+mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10) # answer
+# mesh <- # exercise
+plot(mesh)
+```
+
+```{r}
+fit_pcod2 <- sdmTMB(
+  density ~ poly(depth, 2),
+  spatial = "on",
+  family = tweedie(link = "log"),
+  mesh = mesh,
+  data = pcod
+)
+```
+
+```{r}
+sanity(fit_pcod2)
+fit_pcod2
+```
+
+## Problem 2
+
+The following is some yelloweye rockfish data from the hard bottom longline survey on the inside waters of Vancouver Island.
+
+```{r}
+d <- readRDS(here::here("data/hbll-inside-yelloweye.rds"))
+d_north <- dplyr::filter(d, survey == "HBLL INS N")
+d_north <- add_utm_columns(d_north)
+```
+
+```{r}
+ggplot(d_north, aes(X, Y, size = catch_count)) +
+  facet_wrap(~year) +
+  geom_point(shape = 21)
+```
+
+```{r}
+mesh_north <- make_mesh(d_north, xy_cols = c("X", "Y"), cutoff = 5)
+plot(mesh_north)
+fit_ye <- sdmTMB(
+  catch_count ~ 0 + as.factor(year),
+  offset = log(d_north$hook_count),
+  time = "year",
+  spatial = "on",
+  spatiotemporal = "iid",
+  family = nbinom2(link = "log"),
+  # silent = FALSE,
+  mesh = mesh_north,
+  data = d_north
+)
+```
+
+```{r}
+sanity(fit_ye)
+```
+
+### Exercise:
+
+1.  What is the problem with the above?
+2.  What is a simpler random field structure you could try? Try that below with `fit_ye1`.
+2.  How could you fix this with the new `collapse_spatial_variance` in `sdmTMBcontrol()`?. Try that below with `fit_ye2`.
+4.  What is a simpler family you could try? Try that below with `fit_ye3`.
+
+```{r}
+fit_ye1 <- update(fit_ye, spatiotemporal = "off") # answer
+# fit_ye1 <- update(fit_ye, spatiotemporal = ) # exercise
+sanity(fit_ye1)
+fit_ye1
+```
+
+```{r}
+fit_ye2 <- update(fit_ye, control = sdmTMBcontrol(collapse_spatial_variance = TRUE)) # answer
+# fit_ye2 <- update(fit_ye, control = ) # exercise
+sanity(fit_ye2)
+fit_ye2
+```
+
+```{r}
+fit_ye3 <- update(fit_ye, family = poisson(link = "log")) # answer
+# fit_ye3 <- update(fit_ye, family = ) # exercise
+sanity(fit_ye3)
+fit_ye3
+```
+
+## Problem 3
+
+```{r}
+ggplot(pcod, aes(X, Y, colour = present)) +
+  geom_point()
+```
+
+```{r}
+mesh_full <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)
+```
+
+```{r}
+dat <- filter(pcod, year == 2017)
+mesh <- make_mesh(dat, xy_cols = c("X", "Y"), mesh = mesh_full$mesh )
+```
+
+```{r, eval=FALSE}
+fit_pcod <- sdmTMB(
+  present ~ poly(depth, 2),
+  spatial = "on",
+  family = binomial(),
+  mesh = mesh,
+  data = dat
+)
+```
+
+### Exercise:
+
+1.  What is causing the error message?
+2.  Try to fix it below.
+
+Hint: When was the mesh created relative to any filtering of the data? Why is this a problem?
+
+```{r}
+mesh <- make_mesh(dat, xy_cols = c("X", "Y"), cutoff = 10) # answer
+# mesh <- # exercise
+fit_pcod <- sdmTMB(
+  present ~ poly(depth, 2),
+  spatial = "on",
+  family = binomial(),
+  mesh = mesh,
+  data = dat
+)
+fit_pcod
+```
+
+Bonus: try plotting the depth effect using the `ggeffect::ggeffect()` function.
+
+```{r}
+ggeffects::ggeffect(fit_pcod, terms = "depth [0:600 by=2]") |> plot() # answer
+# ggeffects::ggeffect(fit_pcod, terms = ) |> plot() # exercise
+```

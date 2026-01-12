@@ -45,7 +45,7 @@ Spatially varying trends
 # General idea throughout
 
 .large[
-1. Fit a reasonable spatially explicit model
+1. Fit a reasonable spatiotemporal model (😮‍💨)
 
 2. Predict to a constant grid over the spatial domain
 (standardizes for spatial variation in sampling, combining data sources, etc.)
@@ -68,7 +68,7 @@ Several spatial patterns can create the same center of gravity
 ]
 
 .tiny[
-See for review of 1980s/90s citations: Woillez, M., Poulard, J.-C., Rivoirard, J., Petitgas, P., and Bez, N. 2007. Indices for capturing spatial patterns and their evolution in time, with application to European hake (Merluccius merluccius) in the Bay of Biscay. ICES J Mar Sci 64(3): 537–550. https://doi.org/10.1093/icesjms/fsm025>.
+See for review of 1980s/90s citations: Woillez, M., Poulard, J.-C., Rivoirard, J., Petitgas, P., and Bez, N. 2007. Indices for capturing spatial patterns and their evolution in time, with application to European hake (Merluccius merluccius) in the Bay of Biscay. ICES J Mar Sci 64(3): 537–550. <https://doi.org/10.1093/icesjms/fsm025>.
 
 The GMRF model-based version we're doing here: Thorson, J.T., Pinsky, M.L., and Ward, E.J. 2016. Model-based inference for estimating shifts in species distribution, area occupied and centre of gravity. Methods Ecol Evol 7(8): 990–1002. <https://doi.org/10.1111/2041-210X.12567>.
 ]
@@ -166,7 +166,7 @@ See `exercises/understanding-eao.R`
 Area occupied if density is uniformly distributed at the mean density that a randomly chosen individual experiences
 ]
 
-```{r}
+```{r eao-concentrated}
 D <- c(10, 2, 0) # densities in 3 grid cells
 a <- 1  # area of each cell
 b <- sum(D * a)
@@ -222,7 +222,7 @@ sum(D * a)^2 / sum(D^2 * a)
 If distribution is uniform, EAO maximized (total survey area)
 ]
 
-```{r}
+```{r eao-uniform}
 g2 <- ggplot(data.frame(xmin = 0:2, xmax = 1:3, ymin = 0, ymax = 1, Density = c(3, 3, 3))) + 
   geom_rect(colour = "black", mapping = aes(xmin = xmin, ymin = ymin, xmax = xmax, ymax = ymax, fill = Density)) +
   coord_equal() + theme_void() +
@@ -266,5 +266,14 @@ Barnett, L.A.K., Ward, E.J., and Anderson, S.C. 2021. Improving estimates of spe
 Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. <https://doi.org/10.1111/faf.70028>.
 ]
 
+---
 
+# Subregional indices of abundance
 
+Split up the surveyed area into areas of interest
+
+E.g., north/south, or clusters from spatially varying trends ([Barnett et al. (2021)](https://doi.org/10.1111/ecog.05176))
+
+Run `predict()` and `get_index()` (or `get_cog()` etc.) on each subsetted grid
+
+Integrates index, or center of gravity, etc. over smaller areas to tell a nuanced story

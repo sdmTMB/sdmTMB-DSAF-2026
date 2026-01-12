@@ -30,7 +30,7 @@ library(ggplot2)
 
 A major focus of VAST and tinyVAST
 
-Thus far has we've intentionally kept this as an intention difference between sdmTMB/VAST/tinyVAST
+Thus far has we've kept this as an intentional difference between sdmTMB/VAST/tinyVAST
 
 You *can* fit multivariate models in sdmTMB assuming you want the species, length bins, etc. to have independent fields
 
@@ -62,7 +62,7 @@ Grüss, A., and Thorson, J.T. 2019. Developing spatio-temporal models using mult
 
 ---
 
-### Distributed lag models
+### "Distributed lag" models
 
 .xsmall[
 Estimated spatial, temporal, or spatiotemporal diffusive effects of covariates
@@ -82,9 +82,9 @@ Lindmark, M., Anderson, S.C., and Thorson, J.T. 2025. Estimating scale-dependent
 
 Sparse NUTS (No-U-Turn Sampler)
 
-Decorrelate the posterior using the joint precision matrix from TMB
+Decorrelates the posterior using the joint precision matrix from TMB
 
-~30x faster for sdmTMB models
+Up to ~30x faster for sdmTMB models
 
 Preprint out soon?
 
@@ -117,6 +117,10 @@ Wilson, K.L., Frid, A., and Anderson, S.C. 2025. Groundfish with diverse life hi
 
 ---
 
-# Combining survey data
+# An improved understanding of data integration
 
-A better understanding of how to best combine survey data without explicit calibration
+We're only starting to understand issues that can arise with expanded domain data integration
+
+Best practices for combining different data types and surveys with different length selectivities
+
+Integration of geostatistical and movement data in shared models

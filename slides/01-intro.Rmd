@@ -1,5 +1,5 @@
 ---
-title: "Introduction to the workshop, random fields, and the SPDE"
+title: "Introduction to model-based distribution estimation, random fields, and the SPDE"
 subtitle: "DFO DSAF workshop"
 author: ""
 institute: ""
@@ -27,34 +27,6 @@ library(ggplot2)
 library(mgcv)
 ```
 
-# Who we are
-
-<img src="images/intro_slide.jpg" width="800px" class="center" />
-
----
-
-# Plan for the 3-day workshop
-
-Day 1: Intro to random fields, intro to sdmTMB, spatial models, spatiotemporal models, model comparison/validation, residuals
-
---
-
-Day 2: Families, delta models, time-varying effects, spatially varying effects, index standardization, metrics of distribution change
-
---
-
-Day 3: Integrated models, forecasting, simulating
-
----
-
-# Plan for the workshop
-
-Each day: a mix of lectures and exercises, breaks as needed, talks on applied sdmTMB uses
-
-Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/19zveT73HVWa73UhxsAcDntAhrBDX_F327otqve7RQ4Y/edit?usp=sharing). Thanks!
-
----
-
 # Why study distribution shifts?
 
 Species distributions are changing in response to climate, fishing pressure, and habitat changes
@@ -73,7 +45,7 @@ Shifting distributions can cross management boundaries, affecting quota allocati
 
 ---
 
-# The challenge
+### We have wonderful scientific surveys, but...
 
 Surveys don't always cover the same areas every year
 
@@ -102,11 +74,26 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 ### Species ranges often cover multiple surveys
 
 .pull-left[
-<img src="images/survey-join-map.png" width="60%" />
+<img src="images/survey-join-map.png" width="55%" />
 ]
 
 .pull-right[
-<img src="images/dogfish-svc-simple.png" width="60%" />
+<img src="images/dogfish-svc-simple.png" width="55%" />
+]
+
+.xtiny[
+Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. doi:10.1111/faf.70028.
+]
+
+
+---
+
+### Raw sampling data can confuse sampling changes with distribution changes
+
+<img src="images/velocity-fig.png" width="75%" />
+
+.xtiny[
+Pinsky, M.L., Worm, B., Fogarty, M.J., Sarmiento, J.L., and Levin, S.A. 2013. Marine taxa track local climate velocities. Science 341(6151): 1239–1242. doi:10.1126/science.1239352.
 ]
 
 ---
@@ -114,12 +101,16 @@ Raw survey catch data can't reliably tell us about true distribution changes vs.
 # The solution: model-based metrics
 
 .large[
-1. Fit a statistical spatiotemporal species distribution model
+1. Fit a statistical spatiotemporal ("dynamic") species distribution model
 
 2. Predict to a constant spatial grid
 (standardizes for spatial, gear, and effort variation in sampling)
 
-3. Calculate metrics from those predictions with uncertainty
+3. Calculate distribution metrics from those predictions with uncertainty
+]
+
+.tiny[
+Thorson, J.T., Pinsky, M.L., and Ward, E.J. 2016. Model-based inference for estimating shifts in species distribution, area occupied and centre of gravity. Methods Ecol Evol 7(8): 990–1002. doi:10.1111/2041-210X.12567.
 ]
 
 ---
@@ -142,24 +133,260 @@ Subregional population indices
 
 ---
 
+class: center, middle, inverse
+
+# The first and most complicated part:<br><br>Fitting a useful model
+
+---
+
 # Fitting a useful model
 
-.large[
-To calculate reliable distribution metrics, we need to understand how to fit models to large spatiotemporal survey datasets.
+To calculate reliable distribution metrics, we need to understand how to fit models to large spatiotemporal survey datasets
 
-How do we handle these data?
+--
 
-A key challenge: spatial correlation.
+Spatial data has challenges to modelling
+
+--
+
+Temporal data has challenges to modelling
+
+--
+
+Spatiotemporal data has *a lot* to think to think about when modelling
+
+--
+
+That's going to be the focus of much of this workshop
+
+---
+
+class: middle, inverse
+
+# To make reliable inference on species distribution changes, we first need a good model-based representation of species distribution
+
+---
+
+class: middle
+
+# sdmTMB is an R package that (hopefully) helps you fit a reasonable spatiotemporal model to species distribution data.
+
+# Among many uses, it also helps you summarize distribution metrics from the model output.
+
+---
+
+class: center, middle, inverse
+
+# A few example uses related to distribution or distribution change
+
+---
+
+# Groundfish climate velocities
+
+.center[
+<img src="images/english-velocity.png" width="90%" />
+]
+
+.tiny[
+English, P.A., Ward, E.J., Rooper, C.N., Forrest, R.E., Rogers, L.A., Hunter, K.L., Edwards, A.M., Connors, B.M., and Anderson, S.C. 2021. Contrasting climate velocity impacts in warm and cool locations show that effects of marine warming are worse in already warmer temperate waters. Fish and Fisheries 23(1): 239–255. doi:10.1111/faf.12613.
+]
+
+<!-- --- -->
+
+<!-- #### Integrating trawl and longline surveys for BC groundfish -->
+
+<!-- .center[ -->
+<!-- <img src="images/thompson-integrating-maps.png" width="58%" /> -->
+<!-- ] -->
+
+<!-- .xtiny[ -->
+<!-- Thompson, P.L., Anderson, S.C., Nephin, J., Robb, C.K., Proudfoot, B., Park, A.E., Haggarty, D.R., and Rubidge, E.M. 2023. Integrating trawl and longline surveys across British Columbia improves groundfish distribution predictions. Can. J. Fish. Aquat. Sci. 80(1): 195–210. doi:10.1139/cjfas-2022-0108. -->
+<!-- ] -->
+
+---
+
+##### Integrating dive, trawl, and trap surveys for Dungeness crab
+
+.center[
+<img src="images/nephin.png" width="50%" />
+]
+
+.xtiny[
+Thompson, P.L., Anderson, S.C., Nephin, J., Robb, C.K., Proudfoot, B., Park, A.E., Haggarty, D.R., and Rubidge, E.M. 2023. Integrating trawl and longline surveys across British Columbia improves groundfish distribution predictions. Can. J. Fish. Aquat. Sci. 80(1): 195–210. doi:10.1139/cjfas-2022-0108.
 ]
 
 ---
 
-# Motivating questions
+##### Quantifying expected bycatch ratios based from spatiotemporal distribution to inform legal expansion of Indigenous fishing rights
+
+.pull-left[
+<img src="images/halibut-ye.jpg" width="100%" />
+]
+
+.pull-right[
+<br>
+<br>
+.tiny[
+English, P.A., Picco, C.M., Edwards, J.C., Haggarty, D.R., Forrest, R.E., and Anderson, S.C. 2023. Spatial restrictions hinder avoidance of choke species in an Indigenous rights-based fishery. People and Nature 6: 75–90. <https://doi.org/10.1002/pan3.10554>
+]
+]
+
+---
+
+#### Thermal niche changes for Pacific groundfish
+
+.center[
+<img src="images/thermal-niche.png" width="58%" />
+]
+
+.xtiny[
+Ward, E.J., et al. 2024. Win, lose, or draw: Evaluating dynamic thermal niches of northeast Pacific groundfish. PLOS Climate 3(11): e0000454. Public Library of Science. doi:10.1371/journal.pclm.0000454.
+]
+
+---
+
+##### Biomass and condition distribution changes for Baltic Sea cod
+
+.center[
+<img src="images/condition-sweden.png" width="65%" />
+]
+
+.xtiny[
+Lindmark, M., Anderson, S.C., Gogina, M., and Casini, M. 2023. Evaluating drivers of spatiotemporal variability in individual condition of a bottom-associated marine fish, Atlantic cod (*Gadus morhua*). ICES Journal of Marine Science 80(5): 1539–1550. <https://doi.org/10.1093/icesjms/fsad084>.
+]
+
+---
+
+#### Oxygen limitation effects on fish distribution
+
+.center[
+<img src="images/indivero3.png" width="50%" />
+]
+
+.xtiny[
+Indivero, J., Anderson, S.C., Barnett, L.A.K., Thorson, J.T., Siedlecki, S., Ward, E.J., Essington, T.E. Oxygen constrains local densities across diverse marine bottom-associated marine fishes. Preprint posted soon.
+
+Indivero, J., Anderson, S.C., Barnett, L.A.K., Essington, T.E., and Ward, E.J. 2025. Estimating a physiological threshold to oxygen and temperature from marine monitoring data reveals challenges and opportunities for forecasting distribution shifts. Ecography 2025(e07413). doi:10.1111/ecog.07413.
+]
+
+---
+
+#### More than just fish!<br>52,000 years of woolly rhinoceros population dynamics
+
+.center[
+<img src="images/woolly.png" width="52%" />
+]
+
+.xtiny[
+Fordham, D.A., Brown, S.C., Canteri, E., Austin, J.J., Lomolino, M.V., Haythorne, S., Armstrong, E., Bocherens, H., Manica, A., Rey-Iglesia, A., Rahbek, C., Nogués-Bravo, D., and Lorenzen, E.D. 2024. 52,000 years of woolly rhinoceros population dynamics reveal extinction mechanisms. Proc. Natl. Acad. Sci. U.S.A. 121(24): e2316419121. doi:10.1073/pnas.2316419121.
+]
+
+---
+
+#### Spatiotemporal dynamics of Swedish marine litter
+
+.center[
+<img src="images/garbage2.jpg" width="100%" />
+]
+
+.xtiny[
+Norén, K., Svensson, F., and Lindmark, M. 2025. Evaluating the potential of underwater television to contribute to marine litter assessments alongside bottom trawling. PLoS One 20(6): e0324900. <https://10.1371/journal.pone.0324900>.
+]
+
+---
+
+### Increasingly used by agencies for distribution modelling and index standardization
+
+* DFO
+* NOAA: NWFSC, AFSC, ...
+* Pacific Hake U.S.-Canada assessment
+* Norwegian and Swedish governments
+* NAFO; STACREC .tiny[Standing Committee on Research Coordination]
+* ICES
+* Inter-American Tropical Tuna Commission
+* International Scientific Committee (ISC) for tuna and billfish assessments
+
+---
+
+class: center, middle, inverse
+
+# Workshop plan
+
+---
+
+# Plan for the 3-day workshop
+
+Day 1: Intro to random fields, intro to sdmTMB, spatial models, spatiotemporal models, model comparison/validation, residuals
+
+--
+
+Day 2: Families, delta models, time-varying effects, spatially varying effects, index standardization
+
+--
+
+Day 3: Integrated models, forecasting, simulating, **metrics of distribution change**, future directions, closing thoughts
+
+---
+
+# Plan for the workshop
+
+Each day: a mix of lectures and exercises, breaks as needed, talks on applied sdmTMB uses
+
+Have questions? Please ask any time or in the [Google Doc](https://docs.google.com/document/d/19GWbmK43xR-6rEOzGmMM6BJXo6inB69KByXIslHtgt0/edit?tab=t.0). Thanks!
+
+---
+
+class: center, middle, inverse
+
+# Modelling spatial/spatiotemporal data
+
+---
+
+# Geostatistical data
+
+We're focused on **geostatistical** data: observations of a continuous spatial process at georeferenced locations
+
+--
+
+I.e., we pick spatial coordinates to sample at and observe something, like the number or weight of fish (as opposed to "point process" data or "areal" data)
+
+```{r field-samples, fig.asp=0.4}
+set.seed(123)
+predictor_dat <- data.frame(
+  X = runif(300), Y = runif(300),
+  year = 1
+)
+mesh <- make_mesh(predictor_dat,
+  xy_cols = c("X", "Y"),
+  cutoff = 0.1
+)
+sim_dat <- sdmTMB_simulate(
+  formula = ~1,
+  data = predictor_dat,
+  time = "year",
+  mesh = mesh,
+  family = lognormal(),
+  range = 0.3,
+  sigma_E = 0,
+  phi = 0.05,
+  sigma_O = 0.6,
+  seed = 7,
+  B = c(0) # B0 = intercept
+)
+ggplot(sim_dat, aes(X, Y, col = observed * 10)) +
+  geom_point(alpha = 0.9, size = 3) +
+  scale_colour_viridis_c() +
+  labs(colour = "Observed\ncatch weight")
+```
+
+---
+
+# Modelling spatial data
 
 Data often have spatial attributes
 
 Ideal world:
-  1. Plug spatial covariates into a GLM / GLMM
+  1. Plug spatial covariates into a regression model
   2. Residuals are uncorrelated
 
 ```{r sim-rf-intro, echo=FALSE, fig.asp=0.4}
@@ -200,7 +427,7 @@ Residual spatial autocorrelation is pervasive.
 
 --
 
-Alternatively, there are unmodelled, missing, or "latent" spatially structured variables.
+Alternatively, there are unmodelled, missing, or "latent" spatially structured covariates
 
 ```{r sim-rf-intro-cor, echo=FALSE, fig.asp=0.4}
 set.seed(123)
@@ -231,6 +458,20 @@ ggplot(sim_dat, aes(X, Y, col = observed)) +
   guides(col=guide_legend(title="Residuals")) +
   scale_color_gradient2()
 ```
+
+---
+
+# Why worry about these latent spatial variables?
+
+1. Often they are of ecological interest
+
+--
+
+2. Ignoring them hurts our predictions
+
+--
+
+3. Ignoring them messes up our quantification of uncertainty
 
 ---
 
@@ -268,44 +509,6 @@ Random fields are nice because
 --
 
 3. They estimate ecologically interpretable parameters
-
----
-
-# Spatial data types
-
-### Areal/Lattice
-
-Values are observed on a grid or set of subregion polygons (e.g., interpolated SST from satellite observations, commercial catch records by state/county).
-
---
-
-### Point Process
-
-Observations of a continuous spatial process where the variable of interest is the location of the events.
-
-.tiny[
-Renner, I.W., Elith, J., Baddeley, A., Fithian, W., Hastie, T., Phillips, S.J., Popovic, G., and Warton, D.I. 2015. Point process models for presence‐only analysis. Methods Ecol Evol 6(4): 366–379.
-]
-
----
-
-# Spatial data types
-
-### Geostatistical
-
-Observations of a continuous spatial process observed at a chosen set of points. .tiny[*We're focusing on geostatistical models.]
-
-Data are georeferenced: observations are associated with latitude and longitude. Locations may be unique or repeated (stations)
-
----
-
-# Why is space important?
-
-Data covary spatially (data that are closer are more similar)
-
---
-
-Ignoring this hurts our predictions and messes up our quantification of uncertainty
 
 ---
 
@@ -359,8 +562,6 @@ background-size: 35%
 
 A 2 dimensional "Gaussian Process".
 
---
-
 A realization from a multivariate normal distribution constrained by some covariance function.
 
 ---
@@ -368,7 +569,7 @@ background-image: url("images/elmo.png")
 background-position: bottom right
 background-size: 30%
 
-# Random field
+# Random fields
 
 A way of estimating a wiggly surface to account for spatial and/or spatiotemporal correlation in data.
 
@@ -378,9 +579,8 @@ Alternatively, a way of estimating a wiggly surface to account for unobserved sp
 
 --
 
-As a bonus, it provides useful parameter estimates: spatial variance (magnitude of wiggles) and the rate at which data become uncorrelated with distance (how smooth are the wiggles).
+As a bonus, they provide useful parameter estimates: spatial variance (magnitude of wiggles) and the rate at which data become uncorrelated with distance (how smooth are the wiggles).
 
-<!-- TODO: include nugget / sill? Show slide with semivariogram image? -->
 ---
 
 # Correlation/covariance functions
@@ -465,10 +665,10 @@ df <- dplyr::group_by(df, row) |>
   )
 df$nu <- as.factor(df$nu)
 ggplot(df, aes(x, cov, col = nu, group = nu)) +
-  geom_line(size = 1.3, alpha = 0.8) +
+  geom_line() +
   xlab("Distance") +
-  ylab("Covariance") +
-  ggtitle("Matérn covariance") +
+  ylab("Correlation") +
+  scale_color_viridis_d() +
   guides(col = guide_legend(title = expression(nu))) +
   coord_cartesian(expand = FALSE)
 ```
@@ -758,7 +958,7 @@ Miller, D.L., Glennie, R., and Seaton, A.E. 2019. Understanding the Stochastic P
 
 # Introducing meshes
 
-The SPDE approach involves a triangulation over the area of interest; we call this a "mesh" or more accurately a "finite element mesh".
+The SPDE approach involves a triangulation over the area of interest; we call this a "mesh" or more accurately a "finite element mesh"
 
 ```{r mesh-example, fig.width=5}
 mesh <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)

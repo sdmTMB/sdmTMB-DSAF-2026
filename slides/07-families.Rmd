@@ -61,7 +61,7 @@ Useful for positive continuous data with zeros (e.g., biomass density per unit e
 
 Dispersion ( $\phi$ ) and power ( $p$ ) parameters allow for a wide variety of shapes including many zeros
 
-Also known as compound Poisson-Gamma distribution
+Also known as the compound Poisson-Gamma distribution
 ]
 
 ```{r sim-tweedie, fig.width=4, out.width='400px'}

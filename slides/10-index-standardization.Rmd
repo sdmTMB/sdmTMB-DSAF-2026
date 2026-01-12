@@ -28,7 +28,7 @@ library(ggplot2)
 
 # Why model-based index standardization?
 
-* Design-based methods (stratified means) are straightforward but assume perfect survey implementation
+* Design-based methods (e.g., stratified means) are straightforward but assume perfect survey implementation
 
 --
 
@@ -62,7 +62,7 @@ library(ggplot2)
 
 2. Predict on a grid covering the survey domain: .blue[`predict(..., newdata = ...)`]
 
-3. Sum up the density multiplied by cell area to calculate total abundance or biomass: .blue[`get_index()`]
+3. Sum up the density multiplied by cell area to calculate total abundance or biomass: .blue[`get_index()`] (a grid-based approximation of the integral)
 
 ---
 

@@ -71,9 +71,9 @@ With (or sometimes without) comparative fishing
 
 Examples:
 
-Two surveys or more bienniel surveys run by one agency together covering a coastline (e.g., BC groundfish surveys)
+Two or more surveys by the same agency together covering a coastline (e.g., BC groundfish biennial surveys)
 
-Two or more surveys run by neighbouring agencies with somewhat different gear but enough spatiotemporal proximity
+Two or more surveys run by neighbouring agencies with somewhat different gear but enough spatiotemporal proximity to calibrate
 
 ---
 
@@ -106,10 +106,12 @@ Two or more surveys run by neighbouring agencies with somewhat different gear bu
 .small[Northeast Pacific Ocean Pacific Spiny Dogfish:<br>NOAA + DFO trawl surveys]
 
 .center[
-<img src="images/dogfish-coast.png" width="430px"/>
+<img src="images/dogfish-coast.png" width="390px"/>
 ]
 
-.tiny[[Davidson et al. 2025. In press at Fish and Fisheries](https://doi.org/10.32942/X2V64Z)]
+.xtiny[
+Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. https://doi.org/10.1111/faf.70028.
+]
 
 ---
 
@@ -118,10 +120,12 @@ Two or more surveys run by neighbouring agencies with somewhat different gear bu
 .small[Northeast Pacific Ocean Pacific Spiny Dogfish:<br>NOAA + DFO trawl surveys]
 
 .center[
-<img src="images/dogfish-map.png" width="430px"/>
+<img src="images/dogfish-map.png" width="390px"/>
 ]
 
-.tiny[[Davidson et al. 2025. In press at Fish and Fisheries](https://doi.org/10.32942/X2V64Z)]
+.xtiny[
+Davidson, L.N.K., English, P.A., King, J., Grant, P.B.C., Taylor, I.G., Barnett, L.A.K., Gertseva, V., Tribuzio, C.A., and Anderson, S.C. 2026. Mystery of the disappearing dogfish: transboundary analyses reveal steep population declines across the northeast pacific with little evidence for regional redistribution. Fish and Fisheries 27(1): 1–12. https://doi.org/10.1111/faf.70028.
+]
 
 ---
 
@@ -316,5 +320,5 @@ This is pretty new in the fisheries world
 
 --
 
-Using different likelihoods per row of data isn't merged into the main branch of sdmTMB yet, but should be soon. It's possible in tinyVAST.
+Using different likelihoods per row of data isn't merged into the main branch of sdmTMB yet, but should be soon. See the [multiple-data](https://github.com/sdmTMB/sdmTMB/tree/multiple-data) branch and [this vignette](https://github.com/sdmTMB/sdmTMB/blob/multiple-data/vignettes/articles/multi-family.Rmd). It's possible in tinyVAST.
 
