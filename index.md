@@ -18,9 +18,9 @@ January 12-14 2026
 
 <https://docs.google.com/document/d/19GWbmK43xR-6rEOzGmMM6BJXo6inB69KByXIslHtgt0/edit?tab=t.0>
 
-### Draft manuscript:
+### sdmTMB paper:
 
-[In press paper on sdmTMB at the Journal of Statistical Software](https://doi.org/10.1101/2022.03.24.485545)
+[In press paper on sdmTMB at the Journal of Statistical Software](https://doi.org/10.1101/2022.03.24.485545) *In press for 1.5 years now!*
 
 ### Exercises:
 
