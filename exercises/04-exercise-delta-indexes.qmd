@@ -356,10 +356,12 @@ plot_map <- function(data, column_name) {
 }
 ```
 
-```{r}
-plot_map(p, exp(est1 + est2)) +
-  scale_fill_viridis_c(trans = "log")
+For the delta-gamma model with the two different link functions (logit
+and log link):
 
+```{r}
+plot_map(p, plogis(est1) * exp(est2)) +
+  scale_fill_viridis_c(trans = "log")
 
 # Estimates in link space
 plot_map(p, est1) +
@@ -386,10 +388,6 @@ plot_map(p, omega_s1) +
 
 plot_map(p, omega_s2) +
   scale_fill_gradient2()
-
-plot_map(p, omega_s1 + omega_s2) +
-  scale_fill_gradient2()
-
 ```
 
 ```{r}
@@ -401,13 +399,22 @@ plot_map(p, epsilon_st2) +
   scale_fill_gradient2()
 ```
 
-To get our combined prediction, we can multiply the 2 models in response
-space. I.e. probability of observing a fish times the biomass density
-observed if observed.
+To get our combined prediction when using the Poisson-link delta model,
+we can multiply the 2 models in response space. I.e. probability of
+observing a fish times the biomass density observed if observed.
 
 ```{r}
-plot_map(p, plogis(est1) * exp(est2)) +
+plot_map(p_pl, exp(est1) * exp(est2)) +
   scale_fill_viridis_c(trans = "log10")
+
+plot_map(p_pl, exp(est1 + est2)) + # equivalent to: exp(est1) * exp(est2)
+  scale_fill_viridis_c(trans = "log10")
+
+plot_map(p_pl, omega_s1 + omega_s2) +
+  scale_fill_gradient2()
+
+plot_map(p_pl, epsilon_st1 + epsilon_st2) +
+  scale_fill_gradient2()
 ```
 
 # Index standardization
@@ -439,20 +446,10 @@ Let's see if this index differs from what it would look like using the
 Tweedie model.
 
 ```{r}
-new_grid <- dplyr::filter(grid, Y < 5450)
-
-
-
-
-
-p_tw <- predict(fit_tweedie, newdata = new_grid, return_tmb_object = TRUE)
-index_tw <- get_index(p_tw, area = new_grid$cell_area, bias_correct = TRUE)
-
-
 p_tw <- predict(fit_tweedie, newdata = grid, return_tmb_object = TRUE)
 index_tw <- get_index(p_tw, area = grid$cell_area, bias_correct = TRUE)
 
-?sdmTMB::get_index_sims()
+?sdmTMB::get_index_sims() # keep?
 
 index_dg$Method <- "Delta-gamma"
 index_tw$Method <- "Tweedie"
