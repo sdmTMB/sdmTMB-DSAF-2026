@@ -125,7 +125,7 @@ sanity(fit_ye)
 
 1.  What is the problem with the above?
 2.  What is a simpler random field structure you could try? Try that below with `fit_ye1`.
-2.  How could you fix this with the new `collapse_spatial_variance` in `sdmTMBcontrol()`?. Try that below with `fit_ye2`.
+3.  How could you fix this with the new `collapse_spatial_variance` in `sdmTMBcontrol()`?. Try that below with `fit_ye2`.
 4.  What is a simpler family you could try? Try that below with `fit_ye3`.
 
 ```{r}
@@ -159,7 +159,6 @@ mesh_full <- make_mesh(pcod, xy_cols = c("X", "Y"), cutoff = 10)
 
 ```{r}
 dat <- filter(pcod, year == 2017)
-mesh <- make_mesh(dat, xy_cols = c("X", "Y"), mesh = mesh_full$mesh )
 ```
 
 ```{r, eval=FALSE}
@@ -167,7 +166,7 @@ fit_pcod <- sdmTMB(
   present ~ poly(depth, 2),
   spatial = "on",
   family = binomial(),
-  mesh = mesh,
+  mesh = mesh_full,
   data = dat
 )
 ```
