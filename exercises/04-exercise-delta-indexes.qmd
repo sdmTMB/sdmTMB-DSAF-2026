@@ -449,8 +449,6 @@ Tweedie model.
 p_tw <- predict(fit_tweedie, newdata = grid, return_tmb_object = TRUE)
 index_tw <- get_index(p_tw, area = grid$cell_area, bias_correct = TRUE)
 
-?sdmTMB::get_index_sims() # keep?
-
 index_dg$Method <- "Delta-gamma"
 index_tw$Method <- "Tweedie"
 
