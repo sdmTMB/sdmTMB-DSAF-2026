@@ -9,9 +9,11 @@ execute:
 
 # Goals:
 
--   Practice fitting spatial and spatiotemporal models with less guidance.
+-   Practice fitting spatial and spatiotemporal models with less
+    guidance.
 -   See an example of using an 'offset'.
--   Practice calculating an area-weighted biomass index, center of gravity, and other distribution metrics with less guidance.
+-   Practice calculating an area-weighted biomass index, center of
+    gravity, and other distribution metrics with less guidance.
 
 ```{r, message=FALSE, warning=FALSE}
 library(sdmTMB)
@@ -22,7 +24,8 @@ options(ggplot2.continuous.fill = "viridis")
 theme_set(theme_light())
 ```
 
-We will work with lingcod data from the Queen Charlotte Sound synoptic survey:
+We will work with lingcod data from the Queen Charlotte Sound synoptic
+survey:
 
 # Data
 
@@ -32,10 +35,11 @@ d$area_swept <- d$area_swept / 10000
 glimpse(d)
 ```
 
-Add UTM columns to the dataset. Use `utm_crs = 3156` to match the UTM zone 9 used in the grid.
+Add UTM columns to the dataset. Use `utm_crs = 3156` to match the UTM
+zone 9 used in the grid.
 
 ```{r}
-d <- add_utm_columns(d, units = "km", utm_crs = 3156) # exercise
+d <- # exercise
 ```
 
 Create a mesh with a `cutoff` value of `10` km.
@@ -43,11 +47,13 @@ Create a mesh with a `cutoff` value of `10` km.
 # Mesh
 
 ```{r}
-mesh <- make_mesh(d, c("X", "Y"), cutoff = 10) # exercise
+mesh <- # exercise
 plot(mesh)
 ```
 
-We will run the following code to turn the `qcs_grid` grid built into the package into a grid with values for every year in the lingcod dataset.
+We will run the following code to turn the `qcs_grid` grid built into
+the package into a grid with values for every year in the lingcod
+dataset.
 
 # Grid
 
@@ -68,7 +74,9 @@ This is how an 'offset' works:
 
 Note the offset is the **log** of the effort variable.
 
-Here, we could fit our model to catch weight with an area swept offset or to density. In other cases (e.g., count data), an offset lets us use a count distribution with an effort measure.
+Here, we could fit our model to catch weight with an area swept offset
+or to density. In other cases (e.g., count data), an offset lets us use
+a count distribution with an effort measure.
 
 Fit a spatial model with a Tweedie family:
 
@@ -88,7 +96,8 @@ sanity(fit_spatial)
 fit_spatial
 ```
 
-Calculate theoretical quantile residuals (see `residuals.sdmTMB`; the `residuals()` method) and assign them to a new column `resid_sp` in `d`:
+Calculate theoretical quantile residuals (see `residuals.sdmTMB`; the
+`residuals()` method) and assign them to a new column `resid_sp` in `d`:
 
 ```{r}
 
@@ -103,9 +112,12 @@ abline(0, 1)
 
 ### Exercise:
 
-1.  Did that fit reasonably well such that we can try adding the complexity of spatiotemporal fields?
-2.  In addition to the fits, do the spatial residuals in any year show evidence of persistent spatial autocorrelation?
-3.  How does the QQ plot look? How might we improve that in future modelling?
+1.  Did that fit reasonably well such that we can try adding the
+    complexity of spatiotemporal fields?
+2.  In addition to the fits, do the spatial residuals in any year show
+    evidence of persistent spatial autocorrelation?
+3.  How does the QQ plot look? How might we improve that in future
+    modelling?
 
 # Spatiotemporal model
 
@@ -146,20 +158,24 @@ set.seed(1)
 resid <-  # exercise
 ```
 
-How do the basic randomized quantile residuals look for the overall model? Is this better than the model with spatial random fields only? Why?
+How do the basic randomized quantile residuals look for the overall
+model? Is this better than the model with spatial random fields only?
+Why?
 
 ```{r}
 qqnorm(resid)
 abline(0, 1)
 ```
 
-Predict on the newdata `grid` and set `return_tmb_object = TRUE`. Save the output to `pred`:
+Predict on the newdata `grid` and set `return_tmb_object = TRUE`. Save
+the output to `pred`:
 
 ```{r}
 pred <-  # exercise
 ```
 
-Because we set `return_tmb_object = TRUE`, the prediction data frame is in the list element `data`.
+Because we set `return_tmb_object = TRUE`, the prediction data frame is
+in the list element `data`.
 
 ```{r}
 glimpse(pred$data)
@@ -172,7 +188,7 @@ glimpse(pred$data)
 ## Plotting the model components spatially
 
 ```{r}
-ggplot(pred$data, aes(X, Y, fill = exp(est_non_rf))) +
+ggplot(pred$data, aes(X, Y, fill = ) + # exercise
   geom_raster() +
   facet_wrap(~year) +
   coord_fixed() +
@@ -197,7 +213,7 @@ ggplot(pred$data, aes(X, Y, fill = epsilon_st)) +
 ```
 
 ```{r}
-ggplot(pred$data, aes(X, Y, fill = exp(est))) +
+ggplot(pred$data, aes(X, Y, fill = ) + # exercise
   geom_raster() +
   facet_wrap(~year) +
   scale_fill_viridis_c(trans = "log10") +
@@ -207,7 +223,8 @@ ggplot(pred$data, aes(X, Y, fill = exp(est))) +
 
 # Calculating an area-weighted biomass index
 
-Use `get_index()` to calculate an area-weighted biomass index. Save the output to `ind`.
+Use `get_index()` to calculate an area-weighted biomass index. Save the
+output to `ind`.
 
 ```{r}
 ind <-  # exercise
@@ -221,7 +238,10 @@ ggplot(ind, aes(year, y = est, ymin = lwr, ymax = upr)) +
 
 # Calculating the center of gravity
 
-Use `get_cog()` to calculate the center of gravity (biomass-weighted mean latitude and longitude). You can set `bias_correct = FALSE` so this exercise is a bit faster. Save the output to `cog`. I suggest using `format = "wide"` because it will make plotting easier here.
+Use `get_cog()` to calculate the center of gravity (biomass-weighted
+mean latitude and longitude). You can set `bias_correct = FALSE` so this
+exercise is a bit faster. Save the output to `cog`. I suggest using
+`format = "wide"` because it will make plotting easier here.
 
 ```{r}
 cog <-  # exercise
@@ -235,7 +255,8 @@ ggplot(cog, aes(est_x, est_y, colour = year)) +
 
 # Calculating the biomass-weighted mean depth
 
-Try calculating biomass-weighted mean depth. The depth vector is in `grid$depth`. Use `get_weighted_average()`.
+Try calculating biomass-weighted mean depth. The depth vector is in
+`grid$depth`. Use `get_weighted_average()`.
 
 ```{r}
 mean_depth <- # exercise
@@ -246,7 +267,8 @@ ggplot(mean_depth, aes(year, y = est, ymin = lwr, ymax = upr)) +
 
 # Calculating effective area occupied
 
-Try calculating effective area occupied with `get_eao()`. Don't forget to specify the cell area (2 x 2 km = 4 km^2^ here).
+Try calculating effective area occupied with `get_eao()`. Don't forget
+to specify the cell area (2 x 2 km = 4 km^2^ here).
 
 ```{r}
 eao <-  # exercise
@@ -257,7 +279,8 @@ ggplot(eao, aes(year, y = est, ymin = lwr, ymax = upr)) +
 
 # Calculating range edges
 
-Try the 97.5% and 2.5% range edges with `get_range_edge()`. Remember that `get_range_edge()` takes simulation-based predictions.
+Try the 97.5% and 2.5% range edges with `get_range_edge()`. Remember
+that `get_range_edge()` takes simulation-based predictions.
 
 ```{r}
 pred_sim <- predict(fit, newdata = grid, nsim = 200)
@@ -272,7 +295,8 @@ ggplot(edges, aes(year, y = est, ymin = lwr, ymax = upr, group = quantile)) +
 
 # Calculating a subregional index
 
-Try calculating an index for the northern half of Queen Charlotte Sound (\> 5725 UTMs) and the souther half (\<= 5725 UTMs).
+Try calculating an index for the northern half of Queen Charlotte Sound
+(\> 5725 UTMs) and the souther half (\<= 5725 UTMs).
 
 ```{r}
 grid_north <- filter(grid, Y > 5725)
