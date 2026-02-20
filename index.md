@@ -20,7 +20,8 @@ January 12-14 2026
 
 ### sdmTMB paper:
 
-[In press paper on sdmTMB at the Journal of Statistical Software](https://doi.org/10.1101/2022.03.24.485545) *In press for 1.5 years now!*
+Paper on sdmTMB at the Journal of Statistical Software:   
+<https://doi.org/10.18637/jss.v115.i02>
 
 ### Exercises:
 
